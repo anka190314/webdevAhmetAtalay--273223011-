@@ -3,34 +3,28 @@
 Read this file at the start of every session. Keep it short and correct; update it when the project changes.
 
 ## Project
-<!-- One or two sentences: what the app does and for whom. Link SPEC.md. -->
-See `SPEC.md` for goals, non-goals and acceptance criteria.
+TU Sofia Lab Booking is a web app where students of the Technical University of Sofia see which lab workstations are free on a weekday and book 2-hour slots, and lab staff manage labs and workstations and see how they are used.See `SPEC.md` for goals, non-goals and acceptance criteria.
 
 ## Commands
-<!-- How to install, run, test. Keep these exact and working. -->
-- Install: 
-- Run: 
-- Test: 
-- Coverage: 
-- MCP server: 
+- Install: `npm install`
+- Run: `npm start`
+- Test: `npm test`
+- MCP server: `npm run --silent mcp`
 
 ## Conventions
-<!-- Folder layout, naming, where business rules live, how errors are returned to the client. -->
+- Node.js with Express for the REST API; SQLite in development (one file, `data/app.db`), PostgreSQL from Exercise 4; all SQL stays in `src/db/`. Plain HTML, CSS and JavaScript in the UI.
+- The MCP server and the HTTP API call the same functions in `src/services/`; a rule is never written twice.## Layers
 
 ## Layers
-<!-- Fill in the file or folder for each layer. -->
-Requests arrive two ways and both end in the same place:
-
-- HTTP route handler → service → data access → database
-- MCP tool → **the same service** → data access → database
-
-A route handler reads the request and turns a result into a status code. A service holds the
-rules and knows nothing about HTTP or about MCP. Only the data layer writes SQL. An MCP tool
-that talks to the database directly is a second, unguarded way into your data: never add one.
+- Route handlers: `src/routes/`
+- Services: `src/services/`
+- Data access: `src/db/`
+- Database: `data/app.db` (SQLite in development)
+- MCP tools: `mcp-server/server.js`, calling `src/services/`
 
 ## The model feature
 <!-- Provider, env var, and the call site. -->
-- The provider is named in exactly one file: 
+- The provider is named in exactly one file: `src/services/search.js` (Gemini, model from `MODEL_NAME`, key from `GEMINI_API_KEY`).
 - The key comes from an environment variable and is never committed or logged.
 - Every call has a timeout and a deterministic fallback, so the app still works when the provider is down or rate-limited.
 - The model's output is re-checked against real data before anything is saved or shown.
