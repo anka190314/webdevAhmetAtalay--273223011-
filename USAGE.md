@@ -12,3 +12,11 @@ One row per agent session. In Gemini CLI, type `/stats` before you quit and copy
 | 2026-10-15 | Gemini CLI (gemini-3.5-flash-lite) | 25 080 | 49 | | $0.0076 |
 
 Price list: Gemini API list price for gemini-3.5-flash-lite, $0.30 per 1M input tokens and $2.50 per 1M output tokens (ai.google.dev/gemini-api/docs/pricing, checked 2026-10-15). Cached input tokens (20 296 in the second Gemini session) are counted at the full input price, so the real cost would be slightly lower. The claude.ai chat does not show token counts.
+
+| 2026-10-20 | Claude (claude.ai chat, tutor) | — | — | — | |
+| 2026-10-27 | Claude (claude.ai chat, tutor) | — | — | — | |
+| 2026-10-27 | Gemini CLI (gemini-3.5-flash-lite), always-ask check | 12 517 | 100 | | $0.0040 |
+| 2026-10-27 | Gemini CLI (gemini-3.5-flash-lite), plan and part a | not recorded | not recorded | | |
+| 2026-10-28 | Gemini CLI (gemini-3.5-flash-lite), part b | not recorded | not recorded | | |
+| 2026-10-28 | Gemini CLI (gemini-3.5-flash-lite), slice 1 fixes | 150 614 (109 449 cached) | 1 119 | | $0.0480 |
+| 2026-10-28 | Claude (claude.ai chat, tutor) | — | — | — | |

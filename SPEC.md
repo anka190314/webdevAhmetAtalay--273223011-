@@ -32,6 +32,7 @@ Lab booking.
 - Passwords are stored only as a bcrypt hash, never as readable text.
 - Keys and client secrets live only in Codespaces secrets, never in a file in the repository.
 - Every rule about who may do what is checked on the server, not only hidden in the UI.
+- Seed data goes only into an empty database and never runs when NODE_ENV is production.
 
 ## The model feature
 
@@ -95,6 +96,7 @@ Every screen shows a loading state, an empty state, an error state and the norma
 - [AC-13] A visitor who opens `/labs` without signing in lands on `/login` instead.
 - [AC-14] After signing in with a seeded account, `/labs` shows every seeded lab with its name and its number of workstations.
 - [AC-15] After one lab row is deleted in the database, reloading `/labs` no longer shows that lab.
+- [AC-19] A request to `/api/labs` without a session gets 401, and the response contains no lab data.
 
 ## Traceability
 <!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
@@ -103,4 +105,6 @@ Every screen shows a loading state, an empty state, an error state and the norma
 | AC-1 |  |
 
 ## Spec vs result
-<!-- After the agent builds the slice: which criteria passed, which it missed or reinterpreted, and what you changed in this spec because of it. -->
+- Passed: AC-13 (`/labs` without a session redirects to `/login`; checked with curl, a private window and the AC-13 test), AC-14 (both seeded labs with their workstation counts) and AC-15 (a deleted lab disappears after a reload and does not come back after a restart).
+- Missed or reinterpreted: the agent seeded `@sofia.bg` accounts instead of `example.com`; it seeded on every start with fixed ids, so a deleted lab would have come back; it hard-coded a fallback session secret and left out `sameSite`; it put SQL in the services and all routes and HTML in `server.js`, against the layers in AGENTS.md; it built the list with `innerHTML`; and it added `"type": "module"` to package.json without asking, which would have broken the Exercise 1 MCP server. I asked for each fix and checked it again.
+- Changed: the spec did not say what an API request without a session gets, so I added AC-19; and "seed only an empty database, never in production" is now a constraint, because it was only in my prompt and the agent ignored it the first time.

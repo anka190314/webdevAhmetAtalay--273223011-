@@ -10,6 +10,7 @@ __pycache__/
 !.env.example
 
 # local databases and build output
+data/
 *.db
 *.sqlite
 *.sqlite3

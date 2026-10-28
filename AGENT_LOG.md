@@ -39,3 +39,38 @@ One entry per agent session, newest at the bottom. Be honest: what went wrong is
 - Checkpoints: restarted Gemini so it read the new tool list; check.mjs 12/12 after I restored the description.
 - Went wrong: nothing failed; the model still chose find_lecture.
 - Changed by hand: the description, and then restored it.
+
+## 2026-10-20 · Claude tutor: SPEC.md goals to acceptance criteria
+- Goal: write the project option, goals, non-goals, constraints and acceptance criteria.
+- Delegated: Claude asked questions, criticised my drafts and suggested English wording for most lines; I chose the project and decided what is in and out of scope.
+- Checkpoints: node checks/ex2.mjs after every section.
+- Went wrong: I first wrote the goals as questions copied from the chat and put extras (mobile app, statistics, calendar sync) as goals; I renamed the "Project option" heading, so the check could not find it.
+- Changed by hand: rewrote the goals as decisions, moved the extras to non-goals and kept only a calendar link and a simple usage table.
+
+## 2026-10-27 · Claude tutor: model feature, auth, MCP tools, UI and AGENTS.md
+- Goal: fill in the rest of SPEC.md and AGENTS.md.
+- Delegated: wording of the sections; I chose natural-language search as the model feature.
+- Checkpoints: the ex2 self-check; checked the length and prefix of GEMINI_API_KEY without printing it.
+- Went wrong: the Codespaces secret held the text "Add secret" instead of the key; my API key was visible in a screenshot I shared, so I deleted it and created a new one; PostgreSQL is not installed in the codespace.
+- Changed by hand: the secret value, the new key, and the constraint now says SQLite in development and PostgreSQL from Exercise 4.
+
+## 2026-10-27 · Gemini CLI: read back the always-ask list
+- Goal: check that the agent reads AGENTS.md.
+- Delegated: "What does the Always ask before list in AGENTS.md say?"
+- Checkpoints: compared its answer with the file.
+- Went wrong: it listed 8 of the 9 items and silently left out "sending user data to a third-party model".
+- Changed by hand: nothing; noted it.
+
+## 2026-10-27 · Gemini CLI: plan and database for slice 1
+- Goal: plan slice 1, then build part a (tables and seed data).
+- Delegated: the plan, the npm packages and src/db/database.js.
+- Checkpoints: read the plan before saying go; looked at the tables after part a.
+- Went wrong: after installing the packages it stopped and said the plan was done without building anything; sqlite3 failed to load (ERR_DLOPEN_FAILED), so it switched to node:sqlite; it added "type": "module" to package.json without asking, which would have broken mcp-server/server.js; it kept @sofia.bg accounts and seeded on every start with fixed ids.
+- Changed by hand: added mcp-server/package.json with "type": "commonjs"; asked for the seed fixes; deleted data/app.db so the new seed ran.
+
+## 2026-10-28 · Gemini CLI: sign-in, labs list and fixes
+- Goal: parts b and c of slice 1.
+- Delegated: sign-in, sessions, routes, the two pages and the tests.
+- Checkpoints: npm test, read the session configuration, curl without a session, a private window, deleted a lab row and restarted.
+- Went wrong: npm test hung because the test imported server.js, which started the server; SQL sat in the services and all routes and HTML in server.js, against the layers; the list used innerHTML with database text; the session secret had a hard-coded fallback and the cookie had no sameSite.
+- Changed by hand: asked for each fix and checked it again; added AC-19 and the seed constraint to SPEC.md.

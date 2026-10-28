@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Labs - TU Sofia Lab Booking</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+    h1 { font-size: 22px; margin: 0; }
+    .logout-btn { background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .logout-btn:hover { background: #c9302c; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { padding: 12px 16px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+    .lab-name { font-weight: bold; font-size: 16px; }
+    .ws-count { color: #666; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Laboratories</h1>
+      <form action="/logout" method="POST" style="margin: 0;">
+        <button type="submit" class="logout-btn">Sign Out</button>
+      </form>
+    </header>
+    <div id="loading" style="text-align: center; color: #666;">Loading labs...</div>
+    <div id="empty" style="display: none; text-align: center; color: #666;">No labs available.</div>
+    <ul id="labs-list"></ul>
+  </div>
+  <script>
+    async function loadLabs() {
+      try {
+        const res = await fetch('/api/labs');
+        if (!res.ok) throw new Error('Failed to load labs');
+        const labs = await res.json();
+        document.getElementById('loading').style.display = 'none';
+        const listEl = document.getElementById('labs-list');
+        if (labs.length === 0) {
+          document.getElementById('empty').style.display = 'block';
+          return;
+        }
+        labs.forEach(lab => {
+          const li = document.createElement('li');
+
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'lab-name';
+          nameSpan.textContent = `Lab ${lab.name}`;
+
+          const countSpan = document.createElement('span');
+          countSpan.className = 'ws-count';
+          countSpan.textContent = `${lab.workstation_count} workstations`;
+
+          li.appendChild(nameSpan);
+          li.appendChild(countSpan);
+          listEl.appendChild(li);
+        });
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Error loading labs.';
+      }
+    }
+    loadLabs();
+  </script>
+</body>
+</html>
