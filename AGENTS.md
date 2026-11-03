@@ -52,6 +52,8 @@ TU Sofia Lab Booking is a web app where students of the Technical University of 
 - adding, renaming or removing an MCP tool
 - changing a coverage threshold
 - sending user data to a third-party model
+- creating a new migration file
+- changing or deleting a test that already exists
 
 ## Never
 - commit secrets, passwords, API keys or an OAuth client secret
@@ -59,3 +61,4 @@ TU Sofia Lab Booking is a web app where students of the Technical University of 
 - lower a coverage threshold or switch off a CI job to make the build green
 - add an MCP tool that reaches past the service layer
 - log a prompt that contains somebody's personal data
+

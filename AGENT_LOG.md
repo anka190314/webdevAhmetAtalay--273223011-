@@ -74,3 +74,19 @@ One entry per agent session, newest at the bottom. Be honest: what went wrong is
 - Checkpoints: npm test, read the session configuration, curl without a session, a private window, deleted a lab row and restarted.
 - Went wrong: npm test hung because the test imported server.js, which started the server; SQL sat in the services and all routes and HTML in server.js, against the layers; the list used innerHTML with database text; the session secret had a hard-coded fallback and the cookie had no sameSite.
 - Changed by hand: asked for each fix and checked it again; added AC-19 and the seed constraint to SPEC.md.
+## 2026-11-03 · Slice 2: booking a workstation
+- Goal: a student books a free 2-hour slot, a booked slot is refused with 409, and only the owner can cancel (AC-1 to AC-5, AC-8 and AC-20 in SPEC.md).
+- Autonomy: checkpointed autonomy. The agent works alone inside one step of the plan and stops at the end of that step.
+- Checkpoints: after the plan, I read and correct it before any code is written; after each step, npm test must pass and I read git diff --staged before I commit; the agent stops when a test fails, before it writes or changes a migration, and before it installs a dependency.
+- Delegated: (filled in at the end of the session)
+- Went wrong: (filled in at the end of the session)
+- Changed by hand: (filled in at the end of the session)
+
+### Plan (after review)
+1. Migrations: migrations/001_initial.sql (users, labs, workstations, IF NOT EXISTS) and migrations/002_bookings.sql (bookings with UNIQUE(workstation_id, date, slot) and foreign keys); src/db/migrate.js applies each file once, in order, and records it in schema_migrations; npm run migrate; run on start before the seed.
+2. Service: src/services/errors.js (InvalidBooking, BookingConflict, NotOwner, BookingNotFound, LabNotFound); src/db/bookings.js; src/services/bookingService.js with getWorkstationSlots, createBooking (also turns a UNIQUE violation into BookingConflict) and cancelBooking (the owner check lives only here); rule tests in src/services/bookingService.test.mjs against a temporary database.
+3. Endpoints in src/routes/labs.js: GET /api/labs/:id/slots (200, 401, 404, 422) and POST /api/bookings (201, 401, 409, 422), with API tests.
+4. DELETE /api/bookings/:id (204, 401, 403, 404), with tests for AC-4 and AC-5.
+5. UI: /labs links to /labs/:id; public/lab.html with a day picker, six slots per workstation showing Free, Booked or Cancel, and loading, empty and error states.
+
+Changed in review: the first plan put the bookings table inside database.js instead of a numbered migration; the service returned status codes instead of named errors, and the owner check was described with req.session in the route; "400/422" was undecided, now always 422 as AC-8 says; nothing turned a UNIQUE violation from two students booking at the same moment into 409; there were only API tests, against the real data/app.db; the screen had no Cancel button for AC-4 and the labs list did not link to it.

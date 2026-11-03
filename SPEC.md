@@ -98,12 +98,24 @@ Every screen shows a loading state, an empty state, an error state and the norma
 - [AC-15] After one lab row is deleted in the database, reloading `/labs` no longer shows that lab.
 - [AC-19] A request to `/api/labs` without a session gets 401, and the response contains no lab data.
 
-## Traceability
-<!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
-| Criterion | Test |
-| --- | --- |
-| AC-1 |  |
 
+### Slice 2: booking a workstation
+- [AC-1] A signed-in student who chooses a weekday on the booking screen sees six 2-hour slots from 08:00 to 20:00 for each workstation, each marked "Free" or "Booked".
+- [AC-2] A student who presses "Book" on a free slot sees the slot change to "Booked", the API answers 201, and a new row with their user id appears in the `bookings` table.
+- [AC-3] A student who tries to book a slot that another student has already booked sees "This slot is already booked", the API answers 409, and no new row appears in `bookings`.
+- [AC-4] A student who cancels their own booking gets 204, sees the slot marked "Free" again, and the row is gone from `bookings`.
+- [AC-5] A student who sends a cancel request to the API for another student's booking gets 403, and the row stays in `bookings`.
+- [AC-8] A booking request for a Saturday, or for a slot that starts at or after 20:00, gets 422 from the API, and no new row appears in `bookings`.
+- [AC-20] A booking request without a session gets 401, and no new row appears in `bookings`.
+
+## Traceability
+| AC-1 | |
+| AC-2 | |
+| AC-3 | |
+| AC-4 | |
+| AC-5 | |
+| AC-8 | |
+| AC-20 | |
 ## Spec vs result
 - Passed: AC-13 (`/labs` without a session redirects to `/login`; checked with curl, a private window and the AC-13 test), AC-14 (both seeded labs with their workstation counts) and AC-15 (a deleted lab disappears after a reload and does not come back after a restart).
 - Missed or reinterpreted: the agent seeded `@sofia.bg` accounts instead of `example.com`; it seeded on every start with fixed ids, so a deleted lab would have come back; it hard-coded a fallback session secret and left out `sameSite`; it put SQL in the services and all routes and HTML in `server.js`, against the layers in AGENTS.md; it built the list with `innerHTML`; and it added `"type": "module"` to package.json without asking, which would have broken the Exercise 1 MCP server. I asked for each fix and checked it again.
