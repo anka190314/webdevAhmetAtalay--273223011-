@@ -1,6 +1,7 @@
 import {
   getLabById,
   getWorkstationsForLab,
+  getWorkstationById,
   getBookingsForLab,
   insertBooking,
   getBooking,
@@ -11,7 +12,8 @@ import {
   BookingConflict,
   NotOwner,
   BookingNotFound,
-  LabNotFound
+  LabNotFound,
+  WorkstationNotFound
 } from './errors.js';
 
 function validateDate(dateStr) {
@@ -85,6 +87,11 @@ export function getWorkstationSlots(labId, date, userId) {
 export function createBooking(userId, workstationId, date, slot) {
   validateDate(date);
   validateSlot(slot);
+
+  const ws = getWorkstationById(workstationId);
+  if (!ws) {
+    throw new WorkstationNotFound('Workstation not found');
+  }
 
   try {
     const result = insertBooking(userId, workstationId, date, slot);

@@ -10,6 +10,11 @@ export function getWorkstationsForLab(labId) {
   return stmt.all(labId);
 }
 
+export function getWorkstationById(workstationId) {
+  const stmt = db.prepare('SELECT * FROM workstations WHERE id = ?');
+  return stmt.get(workstationId);
+}
+
 export function getBookingsForLab(labId, date) {
   const stmt = db.prepare(`
     SELECT b.id, b.user_id, b.workstation_id, b.slot
