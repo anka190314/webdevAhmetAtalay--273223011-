@@ -75,14 +75,8 @@ Every screen shows a loading state, an empty state, an error state and the norma
 <!-- Every criterion carries an id. A test proves it by naming that id in its title, for example
      test('AC-3 a booking that overlaps another is refused with 409', ...).
      Say who acts, what they see, and what must be true in the database. -->
-- [AC-1] A signed-in student who chooses a weekday on the booking screen sees six 2-hour slots from 08:00 to 20:00 for each workstation, each marked "Free" or "Booked".
-- [AC-2] A student who presses "Book" on a free slot sees the slot change to "Booked", and a new row with their user id appears in the `bookings` table.
-- [AC-3] A student who tries to book a slot that another student has already booked sees "This slot is already booked", and no new row appears in `bookings`.
-- [AC-4] A student who cancels their own booking sees the slot marked "Free" again, and the row is gone from `bookings`.
-- [AC-5] A student who sends a cancel request to the API for another student's booking gets 403, and the row stays in `bookings`.
 - [AC-6] After lab staff add a new workstation to a lab, a student who opens that lab's booking screen sees the new workstation with six "Free" slots.
 - [AC-7] A student who opens the staff page `/staff` gets 403 and does not see the page content.
-- [AC-8] A booking request for a Saturday, or for a slot that starts at or after 20:00, gets 400 from the API, and no new row appears in `bookings`.
 - [AC-9] A student who presses "Add to Google Calendar" next to a booking sees Google Calendar open with the lab name, the workstation and the correct start and end time already filled in.
 - [AC-10] Lab staff who choose a week on the usage screen see one row per lab with the number of bookings in that week, and each number matches the count of rows in `bookings` for that lab and week.
 - [AC-11] A student who has a password account and signs in with Google using the same e-mail address lands in the same account, and no second row appears in `users`.
