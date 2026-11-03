@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import bcrypt from 'bcrypt';
+import { runMigrations } from './migrate.js';
 
 const dbPath = process.env.DB_PATH || join('data', 'app.db');
 const dir = dirname(dbPath);
@@ -13,28 +14,7 @@ export const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA foreign_keys = ON;');
 
 export async function initDb() {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('student', 'staff')),
-      google_id TEXT UNIQUE
-    );
-
-    CREATE TABLE IF NOT EXISTS labs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT UNIQUE NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS workstations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      lab_id INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      FOREIGN KEY (lab_id) REFERENCES labs(id) ON DELETE CASCADE
-    );
-  `);
-
+  runMigrations(dbPath);
   await seedData();
 }
 

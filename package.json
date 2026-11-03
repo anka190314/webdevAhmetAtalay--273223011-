@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test",
-    "mcp": "node mcp-server/server.js"
+    "mcp": "node mcp-server/server.js",
+    "migrate": "node src/db/migrate.js"
   },
   "repository": {
     "type": "git",

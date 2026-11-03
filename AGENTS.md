@@ -41,6 +41,7 @@ TU Sofia Lab Booking is a web app where students of the Technical University of 
 - Every acceptance criterion in `SPEC.md` has an id like `AC-3`, and a test whose title contains that id.
 - The coverage gate runs in CI: 100% of the service layer, 80% overall.
 - A test is evidence. Changing a test so the code passes destroys the evidence.
+- Migrate: `npm run migrate`
 
 ## Always ask before
 - deleting files or folders
