@@ -101,7 +101,7 @@ Every screen shows a loading state, an empty state, an error state and the norma
 
 ### Slice 2: booking a workstation
 - [AC-1] A signed-in student who chooses a weekday on the booking screen sees six 2-hour slots from 08:00 to 20:00 for each workstation, each marked "Free" or "Booked".
-- [AC-2] A student who presses "Book" on a free slot sees the slot change to "Booked", the API answers 201, and a new row with their user id appears in the `bookings` table.
+- [AC-2] A student who presses "Book" on a free slot sees that slot change to their own booking with a "Cancel" button, the API answers 201, and a new row with their user id appears in the `bookings` table.
 - [AC-3] A student who tries to book a slot that another student has already booked sees "This slot is already booked", the API answers 409, and no new row appears in `bookings`.
 - [AC-4] A student who cancels their own booking gets 204, sees the slot marked "Free" again, and the row is gone from `bookings`.
 - [AC-5] A student who sends a cancel request to the API for another student's booking gets 403, and the row stays in `bookings`.
@@ -119,6 +119,8 @@ Every screen shows a loading state, an empty state, an error state and the norma
 | AC-5 | |
 | AC-8 | |
 | AC-20 | |
+
+
 
 ## Spec vs result
 - Passed: AC-13 (`/labs` without a session redirects to `/login`; checked with curl, a private window and the AC-13 test), AC-14 (both seeded labs with their workstation counts) and AC-15 (a deleted lab disappears after a reload and does not come back after a restart).

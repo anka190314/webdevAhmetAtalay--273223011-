@@ -12,7 +12,9 @@
     .logout-btn { background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
     .logout-btn:hover { background: #c9302c; }
     ul { list-style: none; padding: 0; margin: 0; }
-    li { padding: 12px 16px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+    li { border: 1px solid #eee; margin-bottom: 8px; border-radius: 4px; background: #fafafa; overflow: hidden; }
+    li a { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; text-decoration: none; color: inherit; }
+    li a:hover { background: #f0f0f0; }
     .lab-name { font-weight: bold; font-size: 16px; }
     .ws-count { color: #666; font-size: 14px; }
   </style>
@@ -43,6 +45,8 @@
         }
         labs.forEach(lab => {
           const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = `/labs/${lab.id}`;
 
           const nameSpan = document.createElement('span');
           nameSpan.className = 'lab-name';
@@ -52,8 +56,9 @@
           countSpan.className = 'ws-count';
           countSpan.textContent = `${lab.workstation_count} workstations`;
 
-          li.appendChild(nameSpan);
-          li.appendChild(countSpan);
+          a.appendChild(nameSpan);
+          a.appendChild(countSpan);
+          li.appendChild(a);
           listEl.appendChild(li);
         });
       } catch (err) {

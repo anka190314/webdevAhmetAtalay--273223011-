@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab Booking - TU Sofia Lab Booking</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    h1 { font-size: 22px; margin: 0; }
+    .nav-links { display: flex; gap: 10px; align-items: center; }
+    .btn { background: #0275d8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 14px; }
+    .btn:hover { background: #025aa5; }
+    .btn-danger { background: #d9534f; }
+    .btn-danger:hover { background: #c9302c; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    label { font-weight: bold; font-size: 14px; }
+    input[type="date"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    #error-banner { background: #f8d7da; color: #721c24; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; display: none; }
+    .workstation-card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-bottom: 16px; background: #fafafa; }
+    .ws-name { font-weight: bold; font-size: 18px; margin-bottom: 12px; }
+    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .slot-box { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+    .slot-time { font-size: 13px; color: #555; font-weight: 500; }
+    .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold; display: inline-block; }
+    .status-other { background: #f8d7da; color: #721c24; }
+    #loading, #empty { text-align: center; color: #666; padding: 40px 0; font-size: 16px; }
+    #empty a { color: #0275d8; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 id="lab-title">Lab Booking</h1>
+      <div class="nav-links">
+        <a href="/labs" class="btn btn-secondary">Back to Labs</a>
+        <form action="/logout" method="POST" style="margin: 0;">
+          <button type="submit" class="btn btn-danger">Sign Out</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="controls">
+      <label for="date-picker">Select Date:</label>
+      <input type="date" id="date-picker">
+    </div>
+
+    <div id="error-banner"></div>
+    <div id="loading" style="display: none;">Loading slots...</div>
+    <div id="empty" style="display: none;"></div>
+    <div id="workstations-container"></div>
+  </div>
+
+  <script>
+    const pathParts = window.location.pathname.split('/');
+    const labId = pathParts[pathParts.length - 1];
+
+    const slotTimes = [
+      '08:00 - 10:00',
+      '10:00 - 12:00',
+      '12:00 - 14:00',
+      '14:00 - 16:00',
+      '16:00 - 18:00',
+      '18:00 - 20:00'
+    ];
+
+    const datePicker = document.getElementById('date-picker');
+    const workstationsContainer = document.getElementById('workstations-container');
+    const loadingEl = document.getElementById('loading');
+    const emptyEl = document.getElementById('empty');
+    const errorBanner = document.getElementById('error-banner');
+    const labTitle = document.getElementById('lab-title');
+
+    function getInitialDate() {
+      const d = new Date();
+      const day = d.getDay();
+      if (day === 0) d.setDate(d.getDate() + 1);
+      if (day === 6) d.setDate(d.getDate() + 2);
+      return d.toISOString().split('T')[0];
+    }
+
+    datePicker.value = getInitialDate();
+
+    function showError(msg) {
+      errorBanner.textContent = msg;
+      errorBanner.style.display = 'block';
+    }
+
+    function clearError() {
+      errorBanner.textContent = '';
+      errorBanner.style.display = 'none';
+    }
+
+    function showEmpty(text, showLink = false) {
+      emptyEl.textContent = '';
+      emptyEl.appendChild(document.createTextNode(text));
+      if (showLink) {
+        emptyEl.appendChild(document.createTextNode(' '));
+        const a = document.createElement('a');
+        a.href = '/labs';
+        a.textContent = 'Choose another lab.';
+        emptyEl.appendChild(a);
+      }
+      emptyEl.style.display = 'block';
+    }
+
+    async function loadSlots() {
+      clearError();
+      const date = datePicker.value;
+      if (!date) {
+        showEmpty('Please choose a date.');
+        workstationsContainer.innerHTML = '';
+        return;
+      }
+
+      const [y, m, d] = date.split('-').map(Number);
+      const dayOfWeek = new Date(y, m - 1, d).getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        showEmpty('Weekends are not bookable. Please select a weekday (Monday to Friday).', true);
+        workstationsContainer.innerHTML = '';
+        return;
+      }
+
+      loadingEl.style.display = 'block';
+      emptyEl.style.display = 'none';
+      workstationsContainer.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/labs/${labId}/slots?date=${date}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to load slots');
+        }
+        const workstations = await res.json();
+        loadingEl.style.display = 'none';
+
+        if (workstations.length === 0) {
+          showEmpty('This lab has no workstations yet.', true);
+          return;
+        }
+
+        labTitle.textContent = `Lab ${labId} Booking`;
+
+        workstations.forEach(ws => {
+          const card = document.createElement('div');
+          card.className = 'workstation-card';
+
+          const nameEl = document.createElement('div');
+          nameEl.className = 'ws-name';
+          nameEl.textContent = `Workstation ${ws.name}`;
+          card.appendChild(nameEl);
+
+          const grid = document.createElement('div');
+          grid.className = 'slots-grid';
+
+          ws.slots.forEach(slotInfo => {
+            const box = document.createElement('div');
+            box.className = 'slot-box';
+
+            const timeEl = document.createElement('div');
+            timeEl.className = 'slot-time';
+            timeEl.textContent = slotTimes[slotInfo.slot];
+            box.appendChild(timeEl);
+
+            if (slotInfo.status === 'free') {
+              const bookBtn = document.createElement('button');
+              bookBtn.className = 'btn';
+              bookBtn.textContent = 'Book';
+              bookBtn.addEventListener('click', () => bookSlot(ws.id, date, slotInfo.slot));
+              box.appendChild(bookBtn);
+            } else if (slotInfo.status === 'mine') {
+              const cancelBtn = document.createElement('button');
+              cancelBtn.className = 'btn btn-danger';
+              cancelBtn.textContent = 'Cancel';
+              cancelBtn.addEventListener('click', () => cancelBooking(slotInfo.bookingId));
+              box.appendChild(cancelBtn);
+            } else {
+              const bookedBadge = document.createElement('span');
+              bookedBadge.className = 'status-badge status-other';
+              bookedBadge.textContent = 'Booked';
+              box.appendChild(bookedBadge);
+            }
+
+            grid.appendChild(box);
+          });
+
+          card.appendChild(grid);
+          workstationsContainer.appendChild(card);
+        });
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        showError(err.message || 'An error occurred while loading slots.');
+      }
+    }
+
+    async function bookSlot(workstationId, date, slot) {
+      clearError();
+      try {
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workstationId, date, slot })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Booking failed');
+        }
+        loadSlots();
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    async function cancelBooking(bookingId) {
+      clearError();
+      try {
+        const res = await fetch(`/api/bookings/${bookingId}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Cancellation failed');
+        }
+        loadSlots();
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    datePicker.addEventListener('change', loadSlots);
+    loadSlots();
+  </script>
+</body>
+</html>
