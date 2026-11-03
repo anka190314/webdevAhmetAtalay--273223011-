@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert';
 import http from 'node:http';
 import fs from 'node:fs';
+import bcrypt from 'bcrypt';
 
 const tmpDb = `/tmp/server_test_${Date.now()}_${Math.random()}.db`;
 process.env.DB_PATH = tmpDb;
@@ -16,11 +17,11 @@ test('Server API and Page tests', async (t) => {
   await new Promise((resolve) => server.listen(0, resolve));
   const port = server.address().port;
 
-  const getCookie = async () => {
+  const getCookie = async (email = 'student@example.com', password = 'password123') => {
     const res = await fetch(`http://localhost:${port}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'student@example.com', password: 'password123' })
+      body: JSON.stringify({ email, password })
     });
     return res.headers.get('set-cookie');
   };
@@ -167,6 +168,88 @@ test('Server API and Page tests', async (t) => {
 
       const countAfter = db.prepare('SELECT COUNT(*) AS count FROM bookings').get().count;
       assert.strictEqual(countAfter, countBefore);
+    });
+
+    await t.test('AC-4 A student who cancels their own booking gets 204, sees the slot marked Free again, and the row is gone from bookings', async () => {
+      const cookie = await getCookie();
+      const ws = db.prepare('SELECT id FROM workstations LIMIT 1').get();
+      const date = '2026-11-03';
+      const slot = 3;
+
+      // Create booking
+      const bookRes = await fetch(`http://localhost:${port}/api/bookings`, {
+        method: 'POST',
+        headers: {
+          Cookie: cookie,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ workstationId: ws.id, date, slot })
+      });
+      const booking = await bookRes.json();
+      assert.strictEqual(bookRes.status, 201);
+
+      // Cancel booking
+      const cancelRes = await fetch(`http://localhost:${port}/api/bookings/${booking.id}`, {
+        method: 'DELETE',
+        headers: { Cookie: cookie }
+      });
+      assert.strictEqual(cancelRes.status, 204);
+
+      // Verify row is gone
+      const row = db.prepare('SELECT * FROM bookings WHERE id = ?').get(booking.id);
+      assert.strictEqual(row, undefined);
+    });
+
+    await t.test('AC-5 A student who sends a cancel request to the API for another student\'s booking gets 403, and the row stays in bookings', async () => {
+      const cookie1 = await getCookie();
+      const ws = db.prepare('SELECT id FROM workstations LIMIT 1').get();
+      const date = '2026-11-03';
+      const slot = 4;
+
+      // Create booking as student 1
+      const bookRes = await fetch(`http://localhost:${port}/api/bookings`, {
+        method: 'POST',
+        headers: {
+          Cookie: cookie1,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ workstationId: ws.id, date, slot })
+      });
+      const booking = await bookRes.json();
+
+      // Create student 2 in test database
+      const hash = await bcrypt.hash('password123', 10);
+      db.prepare(`INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)`).run(
+        'student2@example.com',
+        hash,
+        'student'
+      );
+      const cookie2 = await getCookie('student2@example.com', 'password123');
+
+      // Student 2 tries to cancel student 1's booking
+      const cancelRes = await fetch(`http://localhost:${port}/api/bookings/${booking.id}`, {
+        method: 'DELETE',
+        headers: { Cookie: cookie2 }
+      });
+      assert.strictEqual(cancelRes.status, 403);
+
+      // Verify row is still in bookings
+      const row = db.prepare('SELECT * FROM bookings WHERE id = ?').get(booking.id);
+      assert.ok(row);
+    });
+
+    await t.test('Cancellation without session gives 401 and non-existent booking gives 404', async () => {
+      const res401 = await fetch(`http://localhost:${port}/api/bookings/999999`, {
+        method: 'DELETE'
+      });
+      assert.strictEqual(res401.status, 401);
+
+      const cookie = await getCookie();
+      const res404 = await fetch(`http://localhost:${port}/api/bookings/999999`, {
+        method: 'DELETE',
+        headers: { Cookie: cookie }
+      });
+      assert.strictEqual(res404.status, 404);
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));

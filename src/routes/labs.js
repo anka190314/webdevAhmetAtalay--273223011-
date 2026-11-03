@@ -3,11 +3,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'node:fs';
 import { getLabsWithWorkstations } from '../services/labService.js';
-import { getWorkstationSlots, createBooking } from '../services/bookingService.js';
+import { getWorkstationSlots, createBooking, cancelBooking } from '../services/bookingService.js';
 import { getLabById } from '../db/bookings.js';
 import {
   InvalidBooking,
   BookingConflict,
+  NotOwner,
+  BookingNotFound,
   LabNotFound,
   WorkstationNotFound
 } from '../services/errors.js';
@@ -84,6 +86,22 @@ router.post('/api/bookings', requireAuthApi, (req, res) => {
     }
     if (err instanceof WorkstationNotFound || err instanceof LabNotFound) {
       return res.status(404).json({ error: err.message });
+    }
+    throw err;
+  }
+});
+
+router.delete('/api/bookings/:id', requireAuthApi, (req, res) => {
+  try {
+    const bookingId = parseInt(req.params.id, 10);
+    cancelBooking(req.session.userId, bookingId);
+    res.status(204).send();
+  } catch (err) {
+    if (err instanceof BookingNotFound) {
+      return res.status(404).json({ error: err.message });
+    }
+    if (err instanceof NotOwner) {
+      return res.status(403).json({ error: err.message });
     }
     throw err;
   }
