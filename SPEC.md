@@ -109,6 +109,9 @@ Every screen shows a loading state, an empty state, an error state and the norma
 - [AC-20] A booking request without a session gets 401, and no new row appears in `bookings`.
 
 ## Traceability
+<!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
+| Criterion | Test |
+| --- | --- |
 | AC-1 | |
 | AC-2 | |
 | AC-3 | |
@@ -116,6 +119,7 @@ Every screen shows a loading state, an empty state, an error state and the norma
 | AC-5 | |
 | AC-8 | |
 | AC-20 | |
+
 ## Spec vs result
 - Passed: AC-13 (`/labs` without a session redirects to `/login`; checked with curl, a private window and the AC-13 test), AC-14 (both seeded labs with their workstation counts) and AC-15 (a deleted lab disappears after a reload and does not come back after a restart).
 - Missed or reinterpreted: the agent seeded `@sofia.bg` accounts instead of `example.com`; it seeded on every start with fixed ids, so a deleted lab would have come back; it hard-coded a fallback session secret and left out `sameSite`; it put SQL in the services and all routes and HTML in `server.js`, against the layers in AGENTS.md; it built the list with `innerHTML`; and it added `"type": "module"` to package.json without asking, which would have broken the Exercise 1 MCP server. I asked for each fix and checked it again.
