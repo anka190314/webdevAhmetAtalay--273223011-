@@ -82,6 +82,8 @@ One entry per agent session, newest at the bottom. Be honest: what went wrong is
 - Went wrong: in the always-ask test I chose Allow once by mistake, so dayjs was installed (removed with npm uninstall); the first rule tests wrote into data/app.db because ES module imports run before the module body, so the second run failed (fixed with await import() after setting DB_PATH); GET /labs/:id called the data layer directly (fixed); the Exercise 2 self-check passed while six AC ids were duplicated in SPEC.md.
 - Changed by hand: the slice 2 criteria and the removal of the duplicates, the Migrate command in AGENTS.md, the removed fallback in GET /labs/:id, the AC-2 test title, and the architecture note.
 
+
+
 ### Plan (after review)
 1. Migrations: migrations/001_initial.sql (users, labs, workstations, IF NOT EXISTS) and migrations/002_bookings.sql (bookings with UNIQUE(workstation_id, date, slot) and foreign keys); src/db/migrate.js applies each file once, in order, and records it in schema_migrations; npm run migrate; run on start before the seed.
 2. Service: src/services/errors.js (InvalidBooking, BookingConflict, NotOwner, BookingNotFound, LabNotFound); src/db/bookings.js; src/services/bookingService.js with getWorkstationSlots, createBooking (also turns a UNIQUE violation into BookingConflict) and cancelBooking (the owner check lives only here); rule tests in src/services/bookingService.test.mjs against a temporary database.
@@ -99,3 +101,11 @@ Changed in review: the first plan put the bookings table inside database.js inst
 - `src/services/bookingService.js`: `getWorkstationSlots` repeats the lab check instead of calling `getLab` (kept); the conflict check tests `err.code === 'SQLITE_CONSTRAINT'`, which node:sqlite never sets (step 6 showed `ERR_SQLITE_ERROR`), so only the match on the message text works (kept, noted).
 - It read the self-check files in `checks/` several times without being asked.
 - No new dependencies: the only change in package.json is the migrate script I asked for, and dayjs from the always-ask test was removed.
+
+## 2026-11-10 · Slice 3: natural-language search
+- Goal: a student types a request and the booking filters are filled from the model's answer, or stay empty with a message when there is no key, the model is slow, or it answers nonsense (AC-16, AC-17, AC-21 and AC-22 in SPEC.md).
+- Autonomy: checkpointed autonomy. The agent works alone inside one step of the plan and stops at the end of that step.
+- Checkpoints: after the plan, I read and correct it before any code; after each step, npm test must pass and I read git diff --staged before I commit; the agent stops when a test fails and before it installs a dependency; tests never call the real model, only I call it, by hand, once the feature is built; the key is never printed or logged.
+- Delegated: (filled in at the end of the session)
+- Went wrong: (filled in at the end of the session)
+- Changed by hand: (filled in at the end of the session)
