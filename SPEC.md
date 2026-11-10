@@ -118,6 +118,12 @@ One request followed end to end: a student presses "Book" on a free slot.
 - [AC-8] A booking request for a Saturday, or for a slot that starts at or after 20:00, gets 422 from the API, and no new row appears in `bookings`.
 - [AC-20] A booking request without a session gets 401, and no new row appears in `bookings`.
 
+
+### Slice 3: natural-language search
+This slice also implements AC-16 and AC-17 from the project criteria above.
+- [AC-21] When the model answers with a lab that does not exist, a weekend date or a slot outside 08:00-20:00, those filters stay empty, the student sees "Could not understand the request, please choose the day and time yourself", and nothing is booked.
+- [AC-22] When the model gives no answer within 5 seconds, the student sees the same message after about 5 seconds, and the day and time pickers still work.
+
 ## Traceability
 <!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
 | Criterion | Test |
@@ -129,6 +135,10 @@ One request followed end to end: a student presses "Book" on a free slot.
 | AC-5 | |
 | AC-8 | |
 | AC-20 | |
+| AC-16 | |
+| AC-17 | |
+| AC-21 | |
+| AC-22 | |
 
 
 
