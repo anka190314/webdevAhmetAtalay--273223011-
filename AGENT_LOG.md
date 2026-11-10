@@ -117,3 +117,11 @@ Changed in review: the first plan put the bookings table inside database.js inst
 3. UI: a search box on the booking screen; a good answer opens /labs/<labId>?date=&slot= and highlights the slot without booking; the fallback message appears under the search box.
 
 Changed in review: the first plan said slots 0-8 in one place and 0-5 in another; it did not say how the model would be faked in tests, so the model client and the clock are now injected; it defaulted to gemini-2.5-flash instead of the model in the spec; it did not say how the key is sent (now a header, never the URL) or whether a new package was needed (none, fetch is enough); the route was going to collect the labs for the service; the UI had no lab filter for the answer to fill in; the timeout test would have waited five real seconds; and the no-key test would have called the real model, because the codespace has a key.
+
+## 2026-11-11 · Slice 4: MCP tools
+- Goal: the MCP server acts for the owner of a personal token and offers free_workstations, my_bookings and book_slot through the same service functions as the API (AC-18 and AC-23 to AC-26 in SPEC.md).
+- Autonomy: checkpointed autonomy. The agent works alone inside one step of the plan and stops at the end of that step.
+- Checkpoints: after the plan, I read and correct it before any code; after each step, npm test must pass and I read git diff --staged before I commit; the agent stops when a test fails, before it creates a migration and before it installs a dependency; the MCP server writes nothing but protocol messages to stdout; a token is never printed, logged or committed, except once by the script that creates it.
+- Delegated: (filled in at the end of the session)
+- Went wrong: (filled in at the end of the session)
+- Changed by hand: (filled in at the end of the session)
