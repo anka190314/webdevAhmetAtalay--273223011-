@@ -57,6 +57,9 @@ Lab booking.
 | `book_slot` | Books a free 2-hour slot on a workstation for the signed-in student, and refuses a slot that is already booked | the token's owner |
 | `lab_usage` | Returns the number of bookings in each lab for a given week, the same numbers as the usage table | lab staff only |
 
+
+The MCP server acts for one user, given by a personal token in the `MCP_TOKEN` environment variable. A token is a long random string created with `npm run mcp-token -- <email>`, which prints it once; the database keeps only its SHA-256 hash, in the `mcp_tokens` table. A missing or unknown token means no tool runs. Tokens never go into the repository.
+
 ## UI
 Plain HTML, CSS and JavaScript served by Express; the pages call the REST API with `fetch`. Every screen also works on a 375-pixel-wide phone screen. Five screens:
 - Sign in (`/login`): e-mail and password form, and a "Sign in with Google" button.
@@ -124,6 +127,14 @@ This slice also implements AC-16 and AC-17 from the project criteria above.
 - [AC-21] When the model answers with a lab that does not exist, a weekend date or a slot outside 08:00-20:00, those filters stay empty, the student sees "Could not understand the request, please choose the day and time yourself", and nothing is booked.
 - [AC-22] When the model gives no answer within 5 seconds, the student sees the same message after about 5 seconds, and the day and time pickers still work.
 
+
+### Slice 4: MCP tools
+This slice also implements AC-18 from the project criteria above. `lab_usage` comes later, with the staff page.
+- [AC-23] `free_workstations` for a lab and a weekday lists, for each 2-hour slot, the same workstations that the booking screen shows as "Free".
+- [AC-24] `my_bookings` returns the upcoming bookings of the token's owner with lab, workstation and time, and none of another student's.
+- [AC-25] `book_slot` with a valid token books a free slot, and a new row with the token owner's user id appears in `bookings`.
+- [AC-26] A tool call with a missing or unknown token returns an error result, and no row changes in `bookings`.
+
 ## Traceability
 <!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
 | Criterion | Test |
@@ -133,12 +144,27 @@ This slice also implements AC-16 and AC-17 from the project criteria above.
 | AC-3 | |
 | AC-4 | |
 | AC-5 | |
+| AC-6 | |
+| AC-7 | |
 | AC-8 | |
-| AC-20 | |
+| AC-9 | |
+| AC-10 | |
+| AC-11 | |
+| AC-12 | |
+| AC-13 | |
+| AC-14 | |
+| AC-15 | |
 | AC-16 | |
 | AC-17 | |
+| AC-18 | |
+| AC-19 | |
+| AC-20 | |
 | AC-21 | |
 | AC-22 | |
+| AC-23 | |
+| AC-24 | |
+| AC-25 | |
+| AC-26 | |
 
 
 

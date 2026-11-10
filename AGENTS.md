@@ -14,7 +14,7 @@ TU Sofia Lab Booking is a web app where students of the Technical University of 
 
 ## Conventions
 - Node.js with Express for the REST API; SQLite in development (one file, `data/app.db`), PostgreSQL from Exercise 4; all SQL stays in `src/db/`. Plain HTML, CSS and JavaScript in the UI.
-- The MCP server and the HTTP API call the same functions in `src/services/`; a rule is never written twice.## Layers
+- The MCP server and the HTTP API call the same functions in `src/services/`; a rule is never written twice.
 
 ## Layers
 - Route handlers: `src/routes/`
