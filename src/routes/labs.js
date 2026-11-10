@@ -1,7 +1,6 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync } from 'node:fs';
 import { getLabsWithWorkstations } from '../services/labService.js';
 import { getWorkstationSlots, createBooking, cancelBooking, getLab } from '../services/bookingService.js';
 import {
@@ -39,12 +38,8 @@ router.get('/labs', requireAuthPage, (req, res) => {
 
 router.get('/labs/:id', requireAuthPage, (req, res) => {
   try {
-    const lab = getLab(req.params.id);
-    const labHtml = path.join(publicDir, 'lab.html');
-    if (existsSync(labHtml)) {
-      return res.sendFile(labHtml);
-    }
-    res.send(`Lab ${lab.name}`);
+    getLab(req.params.id);
+    res.sendFile(path.join(publicDir, 'lab.html'));
   } catch (err) {
     if (err instanceof LabNotFound) {
       return res.status(404).send('Lab not found');

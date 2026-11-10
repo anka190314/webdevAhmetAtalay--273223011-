@@ -78,7 +78,7 @@ test('Server API and Page tests', async (t) => {
       }
     });
 
-    await t.test('AC-2 A student who presses Book on a free slot sees the slot change to Booked, the API answers 201, and a new row with their user id appears in the bookings table', async () => {
+    await t.test('AC-2 A student who presses Book on a free slot sees that slot change to their own booking with a Cancel button, the API answers 201, and a new row with their user id appears in the bookings table', async () => {
       const cookie = await getCookie();
       const ws = db.prepare('SELECT id FROM workstations LIMIT 1').get();
       const countBefore = db.prepare('SELECT COUNT(*) AS count FROM bookings').get().count;

@@ -90,3 +90,12 @@ One entry per agent session, newest at the bottom. Be honest: what went wrong is
 5. UI: /labs links to /labs/:id; public/lab.html with a day picker, six slots per workstation showing Free, Booked or Cancel, and loading, empty and error states.
 
 Changed in review: the first plan put the bookings table inside database.js instead of a numbered migration; the service returned status codes instead of named errors, and the owner check was described with req.session in the route; "400/422" was undecided, now always 422 as AC-8 says; nothing turned a UNIQUE violation from two students booking at the same moment into 409; there were only API tests, against the real data/app.db; the screen had no Cancel button for AC-4 and the labs list did not link to it.
+
+
+## What the agent did that I did not ask for
+- `src/routes/labs.js`: `GET /labs/:id` had a fallback that sent `Lab ${lab.name}` as HTML when `lab.html` was missing. It never ran, and it would have put the lab name into HTML unescaped. Removed.
+- `src/server.test.mjs`: the AC-2 test title still said the slot changes to "Booked" after I changed AC-2 to a "Cancel" button. Renamed by hand.
+- `public/lab.html`: a weekend check in the browser as well as on the server (kept: the server still refuses with 422); the title shows the lab id ("Lab 1 Booking") instead of its name (kept, known gap); the default date uses `toISOString()`, which is UTC, so between 00:00 and 02:00 in Sofia it shows the previous day (kept, known gap).
+- `src/services/bookingService.js`: `getWorkstationSlots` repeats the lab check instead of calling `getLab` (kept); the conflict check tests `err.code === 'SQLITE_CONSTRAINT'`, which node:sqlite never sets (step 6 showed `ERR_SQLITE_ERROR`), so only the match on the message text works (kept, noted).
+- It read the self-check files in `checks/` several times without being asked.
+- No new dependencies: the only change in package.json is the migrate script I asked for, and dayjs from the always-ask test was removed.
