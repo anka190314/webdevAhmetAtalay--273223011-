@@ -48,6 +48,14 @@ function validateSlot(slot) {
   }
 }
 
+export function getLab(labId) {
+  const lab = getLabById(labId);
+  if (!lab) {
+    throw new LabNotFound('Lab not found');
+  }
+  return lab;
+}
+
 export function getWorkstationSlots(labId, date, userId) {
   validateDate(date);
   const lab = getLabById(labId);

@@ -3,8 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'node:fs';
 import { getLabsWithWorkstations } from '../services/labService.js';
-import { getWorkstationSlots, createBooking, cancelBooking } from '../services/bookingService.js';
-import { getLabById } from '../db/bookings.js';
+import { getWorkstationSlots, createBooking, cancelBooking, getLab } from '../services/bookingService.js';
 import {
   InvalidBooking,
   BookingConflict,
@@ -39,15 +38,19 @@ router.get('/labs', requireAuthPage, (req, res) => {
 });
 
 router.get('/labs/:id', requireAuthPage, (req, res) => {
-  const lab = getLabById(req.params.id);
-  if (!lab) {
-    return res.status(404).send('Lab not found');
+  try {
+    const lab = getLab(req.params.id);
+    const labHtml = path.join(publicDir, 'lab.html');
+    if (existsSync(labHtml)) {
+      return res.sendFile(labHtml);
+    }
+    res.send(`Lab ${lab.name}`);
+  } catch (err) {
+    if (err instanceof LabNotFound) {
+      return res.status(404).send('Lab not found');
+    }
+    throw err;
   }
-  const labHtml = path.join(publicDir, 'lab.html');
-  if (existsSync(labHtml)) {
-    return res.sendFile(labHtml);
-  }
-  res.send(`Lab ${lab.name}`);
 });
 
 router.get('/api/labs', requireAuthApi, (req, res) => {
