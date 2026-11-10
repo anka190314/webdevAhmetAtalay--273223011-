@@ -70,6 +70,22 @@ Every screen shows a loading state, an empty state, an error state and the norma
 ## Architecture
 <!-- Exercise 3. One request traced through every layer, naming the file for each one,
      plus one place where your own code does not match this layering. -->
+One request followed end to end: a student presses "Book" on a free slot.
+
+**Browser**
+- View: `loadSlots()` in `public/lab.html` draws each workstation with its six slots.
+- REST call: `bookSlot()` in `public/lab.html` sends `POST /api/bookings` with `{ workstationId, date, slot }`.
+- State: the slot list is not kept in any variable. After a booking or a cancel, `bookSlot()` and `cancelBooking()` call `loadSlots()`, which fetches `GET /api/labs/:id/slots` again. The chosen date lives only in the date input.
+
+**Server**
+- Route: `router.post('/api/bookings')` in `src/routes/labs.js`. `requireAuthApi` answers 401 without a session; the handler reads the body, calls the service and turns its errors into status codes: `InvalidBooking` 422, `BookingConflict` 409, `WorkstationNotFound` 404. It holds no rule.
+- Service: `createBooking()` in `src/services/bookingService.js` holds the rules: a real weekday, a slot from 0 to 5, an existing workstation, and no double booking (a UNIQUE violation becomes `BookingConflict`).
+- Data access: `getWorkstationById()` and `insertBooking()` in `src/db/bookings.js`, the only file with booking SQL, with parameters instead of string building.
+- Database: the `bookings` table in `data/app.db`, created by `migrations/002_bookings.sql` with `UNIQUE(workstation_id, date, slot)`.
+- Back to the client: 201 with `{ id, userId, workstationId, date, slot }`, or `{ "error": "..." }` with the status code.
+
+**One place that did not match the layering**
+`GET /labs/:id` in `src/routes/labs.js` imported `getLabById` from `src/db/bookings.js` and checked the lab itself, skipping the service. Fixed in commit 634ff3c: the route now calls `getLab()` in `src/services/bookingService.js`, which throws `LabNotFound`.
 
 ## Acceptance criteria
 <!-- Every criterion carries an id. A test proves it by naming that id in its title, for example
