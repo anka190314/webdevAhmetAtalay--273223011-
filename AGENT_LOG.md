@@ -109,3 +109,11 @@ Changed in review: the first plan put the bookings table inside database.js inst
 - Delegated: (filled in at the end of the session)
 - Went wrong: (filled in at the end of the session)
 - Changed by hand: (filled in at the end of the session)
+
+
+### Plan (after review)
+1. Search service: src/services/search.js with createSearch({ askModel, now, timeoutMs }), whose defaults are a fetch call to the Gemini REST API with the key in the x-goog-api-key header, the real date and 5000 ms. No key means the fallback message without calling the model. The model gets only the sentence, today's date and the lab names, and its answer is checked against real labs, weekdays, no past dates and slots 0-5. Tests in src/services/search.test.mjs use a fake askModel for AC-16, AC-17, AC-21 and AC-22.
+2. Route: POST /api/search in src/routes/labs.js (200 with { labId, date, slot } or { message }, 401, 422), with API tests for AC-16 with the key removed, and for 401 and 422.
+3. UI: a search box on the booking screen; a good answer opens /labs/<labId>?date=&slot= and highlights the slot without booking; the fallback message appears under the search box.
+
+Changed in review: the first plan said slots 0-8 in one place and 0-5 in another; it did not say how the model would be faked in tests, so the model client and the clock are now injected; it defaulted to gemini-2.5-flash instead of the model in the spec; it did not say how the key is sent (now a header, never the URL) or whether a new package was needed (none, fetch is enough); the route was going to collect the labs for the service; the UI had no lab filter for the answer to fill in; the timeout test would have waited five real seconds; and the no-key test would have called the real model, because the codespace has a key.
