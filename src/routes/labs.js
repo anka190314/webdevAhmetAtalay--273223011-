@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getLabsWithWorkstations } from '../services/labService.js';
 import { getWorkstationSlots, createBooking, cancelBooking, getLab } from '../services/bookingService.js';
+import { createSearch } from '../services/search.js';
 import {
   InvalidBooking,
   BookingConflict,
@@ -17,6 +18,7 @@ const __dirname = path.dirname(__filename);
 const publicDir = path.join(__dirname, '../../public');
 
 const router = express.Router();
+const search = createSearch();
 
 function requireAuthPage(req, res, next) {
   if (req.session && req.session.userId) {
@@ -103,6 +105,15 @@ router.delete('/api/bookings/:id', requireAuthApi, (req, res) => {
     }
     throw err;
   }
+});
+
+router.post('/api/search', requireAuthApi, async (req, res) => {
+  const { sentence } = req.body || {};
+  if (!sentence || typeof sentence !== 'string' || !sentence.trim()) {
+    return res.status(422).json({ error: 'Sentence is required' });
+  }
+  const result = await search(sentence);
+  res.json(result);
 });
 
 export default router;

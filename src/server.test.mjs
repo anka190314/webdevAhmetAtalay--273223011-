@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 
 const tmpDb = `/tmp/server_test_${Date.now()}_${Math.random()}.db`;
 process.env.DB_PATH = tmpDb;
+delete process.env.GEMINI_API_KEY;
 
 const { initDb, db } = await import('./db/database.js');
 const app = (await import('./app.js')).default;
@@ -250,6 +251,53 @@ test('Server API and Page tests', async (t) => {
         headers: { Cookie: cookie }
       });
       assert.strictEqual(res404.status, 404);
+    });
+
+    await t.test('AC-16 Search via API with no GEMINI_API_KEY returns fallback message and 200', async () => {
+      const cookie = await getCookie();
+      const res = await fetch(`http://localhost:${port}/api/search`, {
+        method: 'POST',
+        headers: {
+          Cookie: cookie,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sentence: 'tomorrow at 10 in lab 1' })
+      });
+      assert.strictEqual(res.status, 200);
+      const data = await res.json();
+      assert.strictEqual(data.message, 'Could not understand the request, please choose the day and time yourself');
+    });
+
+    await t.test('Search via API without a session gives 401', async () => {
+      const res = await fetch(`http://localhost:${port}/api/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sentence: 'tomorrow at 10 in lab 1' })
+      });
+      assert.strictEqual(res.status, 401);
+    });
+
+    await t.test('Search via API with an empty sentence gives 422', async () => {
+      const cookie = await getCookie();
+      const res = await fetch(`http://localhost:${port}/api/search`, {
+        method: 'POST',
+        headers: {
+          Cookie: cookie,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sentence: '' })
+      });
+      assert.strictEqual(res.status, 422);
+
+      const resMissing = await fetch(`http://localhost:${port}/api/search`, {
+        method: 'POST',
+        headers: {
+          Cookie: cookie,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      assert.strictEqual(resMissing.status, 422);
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));
