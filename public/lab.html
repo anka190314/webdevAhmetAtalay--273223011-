@@ -29,6 +29,7 @@
     .status-other { background: #f8d7da; color: #721c24; }
     #loading, #empty { text-align: center; color: #666; padding: 40px 0; font-size: 16px; }
     #empty a { color: #0275d8; text-decoration: underline; }
+    .slot-highlight { background: #e2f0cb !important; border-color: #88b04b !important; box-shadow: 0 0 5px rgba(136, 176, 75, 0.5); }
   </style>
 </head>
 <body>
@@ -43,9 +44,17 @@
       </div>
     </header>
 
-    <div class="controls">
-      <label for="date-picker">Select Date:</label>
-      <input type="date" id="date-picker">
+    <div class="controls" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <label for="search-input">Search:</label>
+        <input type="text" id="search-input" placeholder="e.g. tomorrow at 10 in lab 1" style="flex: 1; min-width: 200px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+        <button type="button" id="search-btn" class="btn">Search</button>
+      </div>
+      <div id="search-message" style="display: none; color: #555; font-size: 14px;"></div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <label for="date-picker">Select Date:</label>
+        <input type="date" id="date-picker">
+      </div>
     </div>
 
     <div id="error-banner"></div>
@@ -57,6 +66,10 @@
   <script>
     const pathParts = window.location.pathname.split('/');
     const labId = pathParts[pathParts.length - 1];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    const slotParam = urlParams.get('slot');
 
     const slotTimes = [
       '08:00 - 10:00',
@@ -73,13 +86,20 @@
     const emptyEl = document.getElementById('empty');
     const errorBanner = document.getElementById('error-banner');
     const labTitle = document.getElementById('lab-title');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const searchMessage = document.getElementById('search-message');
 
     function getInitialDate() {
+      if (dateParam) return dateParam;
       const d = new Date();
       const day = d.getDay();
       if (day === 0) d.setDate(d.getDate() + 1);
       if (day === 6) d.setDate(d.getDate() + 2);
-      return d.toISOString().split('T')[0];
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
     }
 
     datePicker.value = getInitialDate();
@@ -159,6 +179,9 @@
           ws.slots.forEach(slotInfo => {
             const box = document.createElement('div');
             box.className = 'slot-box';
+            if (slotParam !== null && slotInfo.slot === Number(slotParam)) {
+              box.classList.add('slot-highlight');
+            }
 
             const timeEl = document.createElement('div');
             timeEl.className = 'slot-time';
@@ -229,6 +252,60 @@
         showError(err.message);
       }
     }
+
+    async function handleSearch() {
+      const sentence = searchInput.value;
+      if (!sentence || !sentence.trim()) {
+        return;
+      }
+      clearError();
+      searchMessage.textContent = 'Searching...';
+      searchMessage.style.display = 'block';
+      searchBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sentence })
+        });
+
+        searchBtn.disabled = false;
+
+        if (res.status === 401) {
+          searchMessage.textContent = 'Please sign in to search';
+          searchMessage.style.display = 'block';
+          return;
+        }
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Search failed');
+        }
+
+        const data = await res.json();
+        if (data.labId !== undefined && data.date && data.slot !== undefined) {
+          window.location.href = `/labs/${data.labId}?date=${data.date}&slot=${data.slot}`;
+        } else if (data.message) {
+          searchMessage.textContent = data.message;
+          searchMessage.style.display = 'block';
+        } else {
+          searchMessage.textContent = 'Could not understand the request, please choose the day and time yourself';
+          searchMessage.style.display = 'block';
+        }
+      } catch (err) {
+        searchBtn.disabled = false;
+        searchMessage.textContent = err.message || 'An error occurred during search';
+        searchMessage.style.display = 'block';
+      }
+    }
+
+    searchBtn.addEventListener('click', handleSearch);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
+    });
 
     datePicker.addEventListener('change', loadSlots);
     loadSlots();
