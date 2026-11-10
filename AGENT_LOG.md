@@ -78,9 +78,9 @@ One entry per agent session, newest at the bottom. Be honest: what went wrong is
 - Goal: a student books a free 2-hour slot, a booked slot is refused with 409, and only the owner can cancel (AC-1 to AC-5, AC-8 and AC-20 in SPEC.md).
 - Autonomy: checkpointed autonomy. The agent works alone inside one step of the plan and stops at the end of that step.
 - Checkpoints: after the plan, I read and correct it before any code is written; after each step, npm test must pass and I read git diff --staged before I commit; the agent stops when a test fails, before it writes or changes a migration, and before it installs a dependency.
-- Delegated: (filled in at the end of the session)
-- Went wrong: (filled in at the end of the session)
-- Changed by hand: (filled in at the end of the session)
+- Delegated: the migration system, the booking service with its rule tests, the endpoints with API tests, cancellation and authorization, and the booking screen.
+- Went wrong: in the always-ask test I chose Allow once by mistake, so dayjs was installed (removed with npm uninstall); the first rule tests wrote into data/app.db because ES module imports run before the module body, so the second run failed (fixed with await import() after setting DB_PATH); GET /labs/:id called the data layer directly (fixed); the Exercise 2 self-check passed while six AC ids were duplicated in SPEC.md.
+- Changed by hand: the slice 2 criteria and the removal of the duplicates, the Migrate command in AGENTS.md, the removed fallback in GET /labs/:id, the AC-2 test title, and the architecture note.
 
 ### Plan (after review)
 1. Migrations: migrations/001_initial.sql (users, labs, workstations, IF NOT EXISTS) and migrations/002_bookings.sql (bookings with UNIQUE(workstation_id, date, slot) and foreign keys); src/db/migrate.js applies each file once, in order, and records it in schema_migrations; npm run migrate; run on start before the seed.
