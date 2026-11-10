@@ -106,9 +106,9 @@ Changed in review: the first plan put the bookings table inside database.js inst
 - Goal: a student types a request and the booking filters are filled from the model's answer, or stay empty with a message when there is no key, the model is slow, or it answers nonsense (AC-16, AC-17, AC-21 and AC-22 in SPEC.md).
 - Autonomy: checkpointed autonomy. The agent works alone inside one step of the plan and stops at the end of that step.
 - Checkpoints: after the plan, I read and correct it before any code; after each step, npm test must pass and I read git diff --staged before I commit; the agent stops when a test fails and before it installs a dependency; tests never call the real model, only I call it, by hand, once the feature is built; the key is never printed or logged.
-- Delegated: (filled in at the end of the session)
-- Went wrong: (filled in at the end of the session)
-- Changed by hand: (filled in at the end of the session)
+- Delegated: the search service with its tests, the POST /api/search route with API tests, and the search box on the booking screen.
+- Went wrong: the AC-21 test created a separate fake for the weekend, past date, slot 7 and non-JSON cases but called the unknown-lab one each time, so it passed without testing them (fixed, and proven by commenting out the weekend check, which then failed AC-21); the timeout did not give the AbortController's signal to the model call, so a slow request kept running (fixed); "today" was built with toISOString(), which is UTC, in the service and on the booking screen, so after midnight in Sofia the page showed yesterday (fixed); the codespace runs in UTC, so the server needs TZ=Europe/Sofia (to set in Exercise 4); the agent again read files in checks/ without being asked.
+- Changed by hand: the local date in getInitialDate in public/lab.html, the search placeholder (lab 1 became lab 2140), and the manual checks with the real model (AC-17, AC-21) and with the key removed (AC-16).
 
 
 ### Plan (after review)
