@@ -42,3 +42,19 @@ export function deleteBooking(bookingId) {
   const stmt = db.prepare('DELETE FROM bookings WHERE id = ?');
   return stmt.run(bookingId);
 }
+
+export function getUpcomingBookingsForUser(userId, today) {
+  const stmt = db.prepare(`
+    SELECT 
+      b.date,
+      b.slot,
+      l.name AS lab_name,
+      w.name AS workstation_name
+    FROM bookings b
+    JOIN workstations w ON b.workstation_id = w.id
+    JOIN labs l ON w.lab_id = l.id
+    WHERE b.user_id = ? AND b.date >= ?
+    ORDER BY b.date ASC, b.slot ASC
+  `);
+  return stmt.all(userId, today);
+}
