@@ -125,3 +125,12 @@ Changed in review: the first plan said slots 0-8 in one place and 0-5 in another
 - Delegated: (filled in at the end of the session)
 - Went wrong: (filled in at the end of the session)
 - Changed by hand: (filled in at the end of the session)
+
+
+### Plan (after review)
+1. Migration migrations/003_mcp_tokens.sql and src/db/mcpTokens.js; src/db/migrate.js prints to stderr.
+2. src/services/tokenService.js (32 random bytes in hex, only the SHA-256 hash is stored, a token resolves to a user or null), scripts/mcp-token.js and an "mcp-token" script; tests in src/services/tokenService.test.mjs.
+3. getUpcomingBookingsForUser in bookingService.js, with its SQL in src/db/bookings.js, and a service test.
+4. free_workstations, my_bookings and book_slot in mcp-server/server.js next to find_lecture and get_timetable, loading the services with await import() and an absolute DB_PATH; every project tool resolves MCP_TOKEN first. Tests in mcp-server/tools.test.mjs start the server as a child process (AC-18, AC-23, AC-24, AC-25, AC-26); node mcp-server/check.mjs still passes.
+
+Changed in review: the first plan replaced find_lecture and get_timetable, which would have broken Exercise 1; it did not say where the token SQL, the hashing and the script go, or how the CommonJS server loads the ES module services; it did not notice that migrate.js prints "Applied migration" to stdout, which would break the MCP protocol; data/app.db depended on the directory the client starts the server from; the tests were vague and came after the code. The revised plan still allowed "table setup" instead of a migration and kept all the tests in the last step, so I fixed both in the step prompts.
