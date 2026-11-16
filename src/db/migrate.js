@@ -47,7 +47,7 @@ export function runMigrations(dbPath = process.env.DB_PATH || join('data', 'app.
         db.exec(sql);
         insertMigration.run(file);
         db.exec('COMMIT;');
-        console.log(`Applied migration: ${file}`);
+        console.error(`Applied migration: ${file}`);
       } catch (err) {
         db.exec('ROLLBACK;');
         throw err;
@@ -59,7 +59,7 @@ export function runMigrations(dbPath = process.env.DB_PATH || join('data', 'app.
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     runMigrations();
-    console.log('Migrations completed successfully.');
+    console.error('Migrations completed successfully.');
   } catch (err) {
     console.error('Migration failed:', err);
     process.exit(1);
