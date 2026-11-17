@@ -299,6 +299,34 @@ test('Server API and Page tests', async (t) => {
       });
       assert.strictEqual(resMissing.status, 422);
     });
+
+
+    await t.test('AC-14 after signing in with a seeded account, /api/labs lists every seeded lab with its name and number of workstations', async () => {
+      const cookie = await getCookie();
+      const res = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: cookie } });
+      assert.strictEqual(res.status, 200);
+      const labs = await res.json();
+      const expected = db.prepare(`
+        SELECT l.id, l.name, COUNT(w.id) AS workstation_count
+        FROM labs l LEFT JOIN workstations w ON w.lab_id = l.id
+        GROUP BY l.id ORDER BY l.id
+      `).all().map((l) => ({ ...l }));
+      const actual = labs
+        .map((l) => ({ id: l.id, name: l.name, workstation_count: l.workstation_count }))
+        .sort((a, b) => a.id - b.id);
+      assert.ok(expected.length > 0);
+      assert.deepStrictEqual(actual, expected);
+    });
+
+    await t.test('AC-15 after one lab row is deleted in the database, /api/labs no longer lists that lab', async () => {
+      const cookie = await getCookie();
+      const lab = db.prepare('SELECT id FROM labs ORDER BY id DESC LIMIT 1').get();
+      db.prepare('DELETE FROM labs WHERE id = ?').run(lab.id);
+      const res = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: cookie } });
+      const labs = await res.json();
+      assert.ok(labs.length > 0);
+      assert.ok(!labs.some((l) => l.id === lab.id));
+    });
   } finally {
     await new Promise((resolve) => server.close(resolve));
     try {
