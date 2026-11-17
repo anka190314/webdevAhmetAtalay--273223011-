@@ -3,6 +3,7 @@ import session from 'express-session';
 import crypto from 'crypto';
 import authRouter from './routes/auth.js';
 import labsRouter from './routes/labs.js';
+import staffRouter from './routes/staff.js';
 
 let sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -33,6 +34,7 @@ app.use(session({
 
 app.use(authRouter);
 app.use(labsRouter);
+app.use(staffRouter);
 
 // Root redirect
 app.get('/', (req, res) => {

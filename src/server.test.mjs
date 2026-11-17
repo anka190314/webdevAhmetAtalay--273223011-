@@ -301,6 +301,99 @@ test('Server API and Page tests', async (t) => {
     });
 
 
+    await t.test('AC-6 After lab staff add a new workstation to a lab, a student who opens that lab\'s booking screen sees the new workstation with six "Free" slots', async () => {
+      const staffCookie = await getCookie('staff@example.com', 'admin123');
+      const lab = db.prepare('SELECT id FROM labs LIMIT 1').get();
+      const wsName = 'TestWS_' + Date.now();
+      const addRes = await fetch(`http://localhost:${port}/api/labs/${lab.id}/workstations`, {
+        method: 'POST',
+        headers: {
+          Cookie: staffCookie,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: wsName })
+      });
+      assert.strictEqual(addRes.status, 201);
+
+      const studentCookie = await getCookie();
+      const slotsRes = await fetch(`http://localhost:${port}/api/labs/${lab.id}/slots?date=2026-11-04`, {
+        headers: { Cookie: studentCookie }
+      });
+      assert.strictEqual(slotsRes.status, 200);
+      const workstations = await slotsRes.json();
+      const found = workstations.find((w) => w.name === wsName);
+      assert.ok(found);
+      assert.strictEqual(found.slots.length, 6);
+      for (const slot of found.slots) {
+        assert.strictEqual(slot.status, 'free');
+      }
+    });
+
+    await t.test('AC-7 A student who opens the staff page /staff gets 403 and does not see the page content', async () => {
+      const studentCookie = await getCookie();
+      const res = await fetch(`http://localhost:${port}/staff`, {
+        headers: { Cookie: studentCookie }
+      });
+      assert.strictEqual(res.status, 403);
+      const body = await res.text();
+      assert.ok(!body.includes('Staff'));
+    });
+
+    await t.test('AC-10 Lab staff who choose a week on the usage screen see one row per lab with the number of bookings in that week, and each number matches the count of rows in bookings for that lab and week', async () => {
+      const staffCookie = await getCookie('staff@example.com', 'admin123');
+      const week = '2026-11-04';
+      const res = await fetch(`http://localhost:${port}/api/usage?week=${week}`, {
+        headers: { Cookie: staffCookie }
+      });
+      assert.strictEqual(res.status, 200);
+      const usage = await res.json();
+      assert.ok(Array.isArray(usage));
+      const expected = db.prepare(`
+        SELECT l.id, l.name, COUNT(b.id) AS booking_count
+        FROM labs l
+        LEFT JOIN workstations w ON l.id = w.lab_id
+        LEFT JOIN bookings b ON w.id = b.workstation_id AND b.date >= '2026-11-02' AND b.date <= '2026-11-08'
+        GROUP BY l.id, l.name
+        ORDER BY l.id
+      `).all().map((row) => ({ ...row }));
+      assert.deepStrictEqual(usage, expected);
+    });
+
+    await t.test('AC-27 A student who sends a request to a staff API endpoint, to add a workstation or to read the usage numbers, gets 403, and no row changes in workstations; no session gets 401', async () => {
+      const studentCookie = await getCookie();
+      const lab = db.prepare('SELECT id FROM labs LIMIT 1').get();
+      const countBefore = db.prepare('SELECT COUNT(*) AS count FROM workstations').get().count;
+
+      const resWsStudent = await fetch(`http://localhost:${port}/api/labs/${lab.id}/workstations`, {
+        method: 'POST',
+        headers: {
+          Cookie: studentCookie,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: 'UnauthorizedWS' })
+      });
+      assert.strictEqual(resWsStudent.status, 403);
+
+      const resUsageStudent = await fetch(`http://localhost:${port}/api/usage?week=2026-11-04`, {
+        headers: { Cookie: studentCookie }
+      });
+      assert.strictEqual(resUsageStudent.status, 403);
+
+      const countAfter = db.prepare('SELECT COUNT(*) AS count FROM workstations').get().count;
+      assert.strictEqual(countAfter, countBefore);
+
+      const resWsNoSession = await fetch(`http://localhost:${port}/api/labs/${lab.id}/workstations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'NoSessionWS' })
+      });
+      assert.strictEqual(resWsNoSession.status, 401);
+
+      const resUsageNoSession = await fetch(`http://localhost:${port}/api/usage?week=2026-11-04`);
+      assert.strictEqual(resUsageNoSession.status, 401);
+    });
+
+
     await t.test('AC-14 after signing in with a seeded account, /api/labs lists every seeded lab with its name and number of workstations', async () => {
       const cookie = await getCookie();
       const res = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: cookie } });
