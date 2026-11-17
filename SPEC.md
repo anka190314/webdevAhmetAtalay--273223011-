@@ -135,6 +135,12 @@ This slice also implements AC-18 from the project criteria above. `lab_usage` co
 - [AC-25] `book_slot` with a valid token books a free slot, and a new row with the token owner's user id appears in `bookings`.
 - [AC-26] A tool call with a missing or unknown token returns an error result, and no row changes in `bookings`.
 
+
+### Slice 5: staff page
+This slice also implements AC-6, AC-7 and AC-10 from the project criteria above, and the `lab_usage` MCP tool.
+- [AC-27] A student who sends a request to a staff API endpoint, to add a workstation or to read the usage numbers, gets 403, and no row changes in `workstations`.
+- [AC-28] `lab_usage` with a staff member's token returns the same numbers as the usage table for that week, and with a student's token it returns an error result.
+
 ## Traceability
 <!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
 | Criterion | Test |
@@ -165,7 +171,8 @@ This slice also implements AC-18 from the project criteria above. `lab_usage` co
 | AC-24 | |
 | AC-25 | |
 | AC-26 | |
-
+| AC-27 | |
+| AC-28 | |
 
 
 ## Spec vs result
