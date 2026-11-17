@@ -122,9 +122,9 @@ Changed in review: the first plan said slots 0-8 in one place and 0-5 in another
 - Goal: the MCP server acts for the owner of a personal token and offers free_workstations, my_bookings and book_slot through the same service functions as the API (AC-18 and AC-23 to AC-26 in SPEC.md).
 - Autonomy: checkpointed autonomy. The agent works alone inside one step of the plan and stops at the end of that step.
 - Checkpoints: after the plan, I read and correct it before any code; after each step, npm test must pass and I read git diff --staged before I commit; the agent stops when a test fails, before it creates a migration and before it installs a dependency; the MCP server writes nothing but protocol messages to stdout; a token is never printed, logged or committed, except once by the script that creates it.
-- Delegated: (filled in at the end of the session)
-- Went wrong: (filled in at the end of the session)
-- Changed by hand: (filled in at the end of the session)
+- Delegated: the migration and the token service, getUpcomingBookingsForUser, and the three MCP tools in mcp-server/server.js.
+- Went wrong: the first plan replaced the Exercise 1 tools; the agent ran npm run mcp-token on its own, so a token was printed into its context (no row was left in data/app.db, checked); the script read users from src/db directly; for getUpcomingBookingsForUser the agent called .get() without the 'student' value, then looped for about fifteen minutes adding and removing console.log lines, rewrote the existing AC-3 and AC-8 tests and hit the rate limit, so I stopped it; its first MCP test file never killed the server when an assertion failed, so npm test hung, and its AC-23 and AC-25 tests checked almost nothing; the self-check counted src/db/mcpTokens.js as MCP code because of its name; the server still calls itself "lectures" (kept). Commenting out the token check made AC-26 fail, so the test bites.
+- Changed by hand: the token script now goes through tokenService, the AC-24 test, the whole of mcp-server/tools.test.mjs, the rename to src/db/tokens.js, and a manual tools/call against data/app.db with the token kept in a shell variable.
 
 
 ### Plan (after review)
