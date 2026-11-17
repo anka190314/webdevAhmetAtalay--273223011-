@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { insertTokenRecord, getUserByTokenHash } from '../db/mcpTokens.js';
+import { insertTokenRecord, getUserByTokenHash } from '../db/tokens.js';
 import { getUserByEmail } from '../db/users.js';
 
 export async function generateToken(userId) {
