@@ -142,3 +142,11 @@ Changed in review: the first plan replaced find_lecture and get_timetable, which
 - Delegated: (filled in at the end of the session)
 - Went wrong: (filled in at the end of the session)
 - Changed by hand: (filled in at the end of the session)
+
+### Plan (after review)
+1. NotStaff, InvalidInput and DuplicateWorkstation; the SQL in src/db/labs.js; addWorkstation(user, labId, name) and getLabUsage(user, weekDate) in src/services/labService.js, which throw NotStaff for a student; tests in src/services/labService.test.mjs. No migration.
+2. src/routes/staff.js: GET /staff (200, 302, 403), POST /api/labs/:id/workstations (201, 401, 403, 404, 409, 422) and GET /api/usage?week= (200, 401, 403, 422), with API tests for AC-6, AC-7, AC-10 and AC-27.
+3. lab_usage in mcp-server/server.js, calling the same getLabUsage, with an AC-28 test added to mcp-server/tools.test.mjs.
+4. public/staff.html with loading, empty and error states, textContent only.
+
+Changed in review: the first plan added labs (POST /api/labs), which no criterion asks for; it left "400/422" undecided again; it checked the staff role only in a route middleware, so the lab_usage MCP tool would have needed the same rule written a second time, against AGENTS.md; it did not say what happens to a second workstation with the same name in a lab, or whether labs with no bookings get a usage row; it did not choose between labs.js and a new router; and the tests came in the last step.
