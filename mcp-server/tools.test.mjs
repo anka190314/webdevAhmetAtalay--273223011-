@@ -14,6 +14,7 @@ process.env.DB_PATH = tmpDb;
 const { initDb, db } = await import('../src/db/database.js');
 const { generateToken } = await import('../src/services/tokenService.js');
 const { getWorkstationSlots, createBooking } = await import('../src/services/bookingService.js');
+const { getLabUsage } = await import('../src/services/labService.js');
 
 await initDb();
 
@@ -22,6 +23,8 @@ const student2Id = db.prepare('INSERT INTO users (email, password_hash, role) VA
   .run('student2@example.com', 'x', 'student').lastInsertRowid;
 const token1 = await generateToken(student1.id);
 const token2 = await generateToken(student2Id);
+const staff = db.prepare('SELECT * FROM users WHERE role = ?').get('staff');
+const staffToken = await generateToken(staff.id);
 const ws = db.prepare('SELECT id, name, lab_id FROM workstations LIMIT 1').get();
 const date = '2030-01-01'; // a Tuesday, always in the future
 
@@ -123,5 +126,19 @@ test("AC-24 my_bookings lists only the token owner's upcoming bookings", async (
     assert.notStrictEqual(result.isError, true);
     const bookings = JSON.parse(result.content[0].text);
     assert.deepStrictEqual(bookings.map((b) => [b.date, b.slot]), [[date, 0]]);
+  });
+});
+
+test("AC-28 lab_usage with staff token returns lab usage and with student token returns error", async () => {
+  const expected = getLabUsage(staff, '2030-01-01');
+  await withServer(staffToken, async (server) => {
+    const result = await server.callTool('lab_usage', { week: '2030-01-01' });
+    assert.notStrictEqual(result.isError, true);
+    const usage = JSON.parse(result.content[0].text);
+    assert.deepStrictEqual(usage, JSON.parse(JSON.stringify(expected)));
+  });
+  await withServer(token1, async (server) => {
+    const result = await server.callTool('lab_usage', { week: '2030-01-01' });
+    assert.strictEqual(result.isError, true);
   });
 });

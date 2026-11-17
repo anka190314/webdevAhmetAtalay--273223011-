@@ -27,7 +27,7 @@ function toolResult(id, text, isError) {
   });
 }
 
-let initDb, resolveToken, getWorkstationSlots, getUpcomingBookingsForUser, createBooking;
+let initDb, resolveToken, getWorkstationSlots, getUpcomingBookingsForUser, createBooking, getLabUsage;
 let BookingConflict;
 let dbInitialized = false;
 
@@ -43,6 +43,9 @@ async function ensureServices() {
     getWorkstationSlots = bookingMod.getWorkstationSlots;
     getUpcomingBookingsForUser = bookingMod.getUpcomingBookingsForUser;
     createBooking = bookingMod.createBooking;
+
+    const labMod = await import(pathToFileURL(path.join(__dirname, "../src/services/labService.js")).href);
+    getLabUsage = labMod.getLabUsage;
 
     const errMod = await import(pathToFileURL(path.join(__dirname, "../src/services/errors.js")).href);
     BookingConflict = errMod.BookingConflict;
@@ -123,6 +126,17 @@ const TOOLS = [
       },
       required: ["workstation_id", "date", "slot"]
     }
+  },
+  {
+    name: "lab_usage",
+    description: "Returns the number of bookings in each lab for a given week, the same numbers as the usage table",
+    inputSchema: {
+      type: "object",
+      properties: {
+        week: { type: "string", description: "Week date in YYYY-MM-DD format" }
+      },
+      required: ["week"]
+    }
   }
 ];
 
@@ -187,7 +201,7 @@ rl.on("line", (line) => {
         } else {
           toolResult(msg.id, classes.join("\n"), false);
         }
-      } else if (name === "free_workstations" || name === "my_bookings" || name === "book_slot") {
+      } else if (name === "free_workstations" || name === "my_bookings" || name === "book_slot" || name === "lab_usage") {
         try {
           await ensureServices();
           const user = await resolveToken(process.env.MCP_TOKEN);
@@ -216,6 +230,9 @@ rl.on("line", (line) => {
           } else if (name === "book_slot") {
             const booking = createBooking(user.id, args.workstation_id, args.date, args.slot);
             toolResult(msg.id, JSON.stringify(booking), false);
+          } else if (name === "lab_usage") {
+            const usage = getLabUsage(user, args.week);
+            toolResult(msg.id, JSON.stringify(usage), false);
           }
         } catch (err) {
           if (BookingConflict && err instanceof BookingConflict) {
