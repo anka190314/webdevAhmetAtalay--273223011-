@@ -1,7 +1,7 @@
 import { getUserByEmail, getUserById, getUserByGoogleId, updateUserGoogleId, createUser } from '../db/users.js';
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
-import { EmailNotVerified } from './errors.js';
+import { EmailNotVerified, InvalidInput, EmailTaken } from './errors.js';
 
 export async function authenticateUser(email, password) {
   const user = await getUserByEmail(email);
@@ -45,6 +45,28 @@ export async function findOrCreateGoogleUser({ sub, email, emailVerified }) {
     passwordHash,
     role: 'student',
     googleId: sub
+  });
+  const { password_hash, ...rest } = newUser;
+  return rest;
+}
+
+export async function createAccount({ email, password, role }) {
+  if (!password || password.length < 12) {
+    throw new InvalidInput('Password must be at least 12 characters long');
+  }
+  if (role !== 'student' && role !== 'staff') {
+    throw new InvalidInput('Role must be student or staff');
+  }
+  const existing = await getUserByEmail(email);
+  if (existing) {
+    throw new EmailTaken('Email already taken');
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  const newUser = await createUser({
+    email,
+    passwordHash,
+    role,
+    googleId: null
   });
   const { password_hash, ...rest } = newUser;
   return rest;

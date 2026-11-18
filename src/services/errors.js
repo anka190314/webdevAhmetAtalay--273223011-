@@ -8,3 +8,4 @@ export class NotStaff extends Error {}
 export class InvalidInput extends Error {}
 export class DuplicateWorkstation extends Error {}
 export class EmailNotVerified extends Error {}
+export class EmailTaken extends Error {}

@@ -12,7 +12,8 @@
     "test": "node --test \"src/**/*.test.mjs\" \"mcp-server/*.test.mjs\"",
     "mcp": "node --env-file-if-exists=.env mcp-server/server.js",
     "migrate": "node --env-file-if-exists=.env src/db/migrate.js",
-    "mcp-token": "node --env-file-if-exists=.env scripts/mcp-token.js"
+    "mcp-token": "node --env-file-if-exists=.env scripts/mcp-token.js",
+    "create-user": "node --env-file-if-exists=.env scripts/create-user.js"
   },
   "repository": {
     "type": "git",

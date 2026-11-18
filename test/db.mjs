@@ -6,6 +6,8 @@ export async function createTestSchema() {
     throw new Error('Refusing to run tests against Neon production database');
   }
 
+  process.env.SEED_DEMO_USERS = 'true';
+
   const schemaName = `test_${Math.random().toString(36).substring(2, 11)}`;
 
   const client = new pg.Client({ connectionString: databaseUrl });

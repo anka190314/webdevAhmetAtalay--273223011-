@@ -6,8 +6,8 @@ const { url, drop } = await createTestSchema();
 process.env.DATABASE_URL = url;
 
 const { initDb, pool, query } = await import('../db/database.js');
-const { findOrCreateGoogleUser } = await import('./authService.js');
-const { EmailNotVerified } = await import('./errors.js');
+const { findOrCreateGoogleUser, createAccount } = await import('./authService.js');
+const { EmailNotVerified, InvalidInput, EmailTaken } = await import('./errors.js');
 
 after(async () => {
   await pool.end();
@@ -88,4 +88,33 @@ test('AC-11 Google auth and linking', async () => {
   );
   const staffCheckRes = await query('SELECT google_id FROM users WHERE id = $1', [staff.id]);
   assert.strictEqual(staffCheckRes.rows[0].google_id, null);
+});
+
+test('createAccount validation, success, and duplicate email', async () => {
+  await initDb();
+
+  // Refuses password < 12 chars
+  await assert.rejects(
+    () => createAccount({ email: 'user1@example.com', password: 'short', role: 'student' }),
+    (err) => err instanceof InvalidInput
+  );
+
+  // Refuses role other than student or staff
+  await assert.rejects(
+    () => createAccount({ email: 'user1@example.com', password: 'longenoughpassword', role: 'admin' }),
+    (err) => err instanceof InvalidInput
+  );
+
+  // Success
+  const created = await createAccount({ email: 'user1@example.com', password: 'longenoughpassword', role: 'student' });
+  assert.ok(created);
+  assert.strictEqual(created.email, 'user1@example.com');
+  assert.strictEqual(created.role, 'student');
+  assert.ok(created.id);
+
+  // Refuses duplicate email
+  await assert.rejects(
+    () => createAccount({ email: 'user1@example.com', password: 'anotherlongpassword', role: 'staff' }),
+    (err) => err instanceof EmailTaken
+  );
 });
