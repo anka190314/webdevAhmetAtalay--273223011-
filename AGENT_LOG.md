@@ -159,3 +159,14 @@ Changed in review: the first plan added labs (POST /api/labs), which no criterio
 - Delegated: findOrCreateGoogleUser with its tests, and the calendar link with its tests and the link on the booking screen.
 - Went wrong: the AC-11 test did not cover the real attack, an unverified Google e-mail that matches an existing account, so I added that case by hand; the agent had to fix a missing lab_id in its own new AC-9 test; the calendar link makes its slot taller, so the other Book buttons in that row move down (kept, cosmetic); nothing checks a real 375-pixel screen automatically, so AC-12 is a structural test plus a check in the browser.
 - Changed by hand: the unverified e-mail case in the AC-11 test, src/pages.test.mjs for AC-12, and two checks in the browser: the calendar link opens Google Calendar with the lab, the workstation and the right time, and at 375 pixels (iPhone SE in the responsive mode of Safari) a slot can be booked without scrolling sideways.
+
+
+## 2026-11-18 · Exercise 4: environment, secrets and the move to Postgres
+- Goal: every environment variable listed and the required ones checked at start; a secrets search; the app moved from SQLite to Postgres on Neon, with tests on a throwaway local Postgres.
+- Autonomy: checkpointed autonomy, one step at a time.
+- Checkpoints: I read every plan and every diff; npm test after each step; tests never touch Neon (the helper refuses a neon.tech address); real values only in .env and in Render, never in a chat.
+- Plan (after review): A. infrastructure with the app still on SQLite: pg, a postgres:16 service in CI, and test/db.mjs, which creates a fresh schema per test file and puts it into the connection string. B. the switch in one go: database.js, migrations, src/db/, services, routes, the MCP server, the script and every test file.
+- Changed in review: the first plan said every step would end with npm test passing, which cannot be true once src/db/ is async; it used SET search_path on a pool, which changes only one connection; it did not cast COUNT(*), which pg returns as a string; and it did not say what happens to the date column, the inserted ids, the seed or the pool at the end of a test file.
+- Went wrong: in the secrets search the agent looked only for Google keys starting with AIza and reported that no real secret exists, but my key starts with AQ.; my own search of the history for that prefix found nothing.
+- Delegated: (filled in at the end of the session)
+- Changed by hand: (filled in at the end of the session)
