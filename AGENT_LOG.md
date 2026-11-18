@@ -150,3 +150,12 @@ Changed in review: the first plan replaced find_lecture and get_timetable, which
 4. public/staff.html with loading, empty and error states, textContent only.
 
 Changed in review: the first plan added labs (POST /api/labs), which no criterion asks for; it left "400/422" undecided again; it checked the staff role only in a route middleware, so the lab_usage MCP tool would have needed the same rule written a second time, against AGENTS.md; it did not say what happens to a second workstation with the same name in a lab, or whether labs with no bookings get a usage row; it did not choose between labs.js and a new router; and the tests came in the last step.
+
+
+## 2026-11-18 · Slice 6: calendar link, Google account linking, phone width
+- Goal: the last three criteria without a test: AC-9 (Add to Google Calendar), AC-11 (Google sign-in lands in the same account) and AC-12 (booking on a 375-pixel-wide screen).
+- Autonomy: checkpointed autonomy, one step at a time; the same checkpoints as slice 5.
+- Plan (written by me, not by the agent, because the three parts are small and independent): 1. findOrCreateGoogleUser in authService.js with service tests (AC-11); 2. a calendar link service, the link next to a student's own booking, with tests (AC-9); 3. a structural test for the pages and a check at 375 pixels in the browser (AC-12, by hand).
+- Delegated: (filled in at the end of the session)
+- Went wrong: (filled in at the end of the session)
+- Changed by hand: (filled in at the end of the session)

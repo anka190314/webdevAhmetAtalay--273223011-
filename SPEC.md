@@ -141,6 +141,9 @@ This slice also implements AC-6, AC-7 and AC-10 from the project criteria above,
 - [AC-27] A student who sends a request to a staff API endpoint, to add a workstation or to read the usage numbers, gets 403, and no row changes in `workstations`.
 - [AC-28] `lab_usage` with a staff member's token returns the same numbers as the usage table for that week, and with a student's token it returns an error result.
 
+### Slice 6: calendar link, Google account linking, phone width
+This slice implements AC-9, AC-11 and AC-12 from the project criteria above. The Google sign-in flow itself (redirect and callback) comes in Exercise 4; this slice builds and tests the linking rule that flow will call.
+
 ## Traceability
 <!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
 | Criterion | Test |
