@@ -16,6 +16,7 @@ import {
   LabNotFound,
   WorkstationNotFound
 } from './errors.js';
+import { calendarLink } from './calendarService.js';
 
 function validateDate(dateStr) {
   if (!dateStr || typeof dateStr !== 'string') {
@@ -79,11 +80,26 @@ export function getWorkstationSlots(labId, date, userId) {
       const b = bookingMap.get(`${ws.id}-${slot}`);
       let status = 'free';
       let bookingId = null;
+      let calendarUrl = undefined;
       if (b) {
         bookingId = b.id;
-        status = b.user_id === userId ? 'mine' : 'other';
+        if (b.user_id === userId) {
+          status = 'mine';
+          calendarUrl = calendarLink({
+            labName: lab.name,
+            workstationName: ws.name,
+            date,
+            slot
+          });
+        } else {
+          status = 'other';
+        }
       }
-      slots.push({ slot, status, bookingId });
+      const slotObj = { slot, status, bookingId };
+      if (calendarUrl) {
+        slotObj.calendarUrl = calendarUrl;
+      }
+      slots.push(slotObj);
     }
     return {
       id: ws.id,

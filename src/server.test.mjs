@@ -394,6 +394,54 @@ test('Server API and Page tests', async (t) => {
     });
 
 
+    await t.test('AC-9 a student\'s own booked slot has calendarUrl and someone else\'s does not', async () => {
+      const cookie1 = await getCookie();
+      const ws = db.prepare('SELECT id, lab_id FROM workstations LIMIT 1').get();
+      const labId = ws.lab_id;
+      const date = '2026-11-10';
+      const slot = 0;
+
+      await fetch(`http://localhost:${port}/api/bookings`, {
+        method: 'POST',
+        headers: {
+          Cookie: cookie1,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ workstationId: ws.id, date, slot })
+      });
+
+      const res1 = await fetch(`http://localhost:${port}/api/labs/${labId}/slots?date=${date}`, {
+        headers: { Cookie: cookie1 }
+      });
+      assert.strictEqual(res1.status, 200);
+      const workstations1 = await res1.json();
+      const ws1 = workstations1.find((w) => w.id === ws.id);
+      const slot1 = ws1.slots.find((s) => s.slot === slot);
+      assert.strictEqual(slot1.status, 'mine');
+      assert.ok(slot1.calendarUrl);
+      assert.ok(slot1.calendarUrl.includes('calendar.google.com'));
+
+      const hash = await bcrypt.hash('password123', 10);
+      try {
+        db.prepare(`INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)`).run(
+          'student_calendar@example.com',
+          hash,
+          'student'
+        );
+      } catch (e) {}
+      const cookie2 = await getCookie('student_calendar@example.com', 'password123');
+
+      const res2 = await fetch(`http://localhost:${port}/api/labs/${labId}/slots?date=${date}`, {
+        headers: { Cookie: cookie2 }
+      });
+      assert.strictEqual(res2.status, 200);
+      const workstations2 = await res2.json();
+      const ws2 = workstations2.find((w) => w.id === ws.id);
+      const slot2 = ws2.slots.find((s) => s.slot === slot);
+      assert.strictEqual(slot2.status, 'other');
+      assert.strictEqual(slot2.calendarUrl, undefined);
+    });
+
     await t.test('AC-14 after signing in with a seeded account, /api/labs lists every seeded lab with its name and number of workstations', async () => {
       const cookie = await getCookie();
       const res = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: cookie } });

@@ -200,6 +200,14 @@
               cancelBtn.textContent = 'Cancel';
               cancelBtn.addEventListener('click', () => cancelBooking(slotInfo.bookingId));
               box.appendChild(cancelBtn);
+
+              const calLink = document.createElement('a');
+              calLink.className = 'btn';
+              calLink.href = slotInfo.calendarUrl;
+              calLink.target = '_blank';
+              calLink.rel = 'noopener';
+              calLink.textContent = 'Add to Google Calendar';
+              box.appendChild(calLink);
             } else {
               const bookedBadge = document.createElement('span');
               bookedBadge.className = 'status-badge status-other';
