@@ -139,9 +139,9 @@ Changed in review: the first plan replaced find_lecture and get_timetable, which
 - Goal: lab staff add workstations and see the number of bookings per lab in a chosen week, on /staff and through the lab_usage MCP tool; students get 403 on the page and on the staff API (AC-6, AC-7, AC-10, AC-27 and AC-28 in SPEC.md).
 - Autonomy: checkpointed autonomy. The agent works alone inside one step of the plan and stops at the end of that step.
 - Checkpoints: after the plan, I read and correct it before any code; after each step, npm test must pass and I read git diff --staged before I commit; the agent stops when the same test fails twice, before it creates a migration, before it installs a dependency and before it changes an existing test; it runs no script that changes data/app.db.
-- Delegated: (filled in at the end of the session)
-- Went wrong: (filled in at the end of the session)
-- Changed by hand: (filled in at the end of the session)
+- Delegated: the staff service functions with their tests, src/routes/staff.js with API tests, the lab_usage MCP tool with its test, and public/staff.html.
+- Went wrong: the first plan added labs, which no criterion asks for, and checked the staff role only in a route middleware; my own prompt said "a week given by its Wednesday", so the agent computed Monday and Friday as that day minus and plus two days, which gives the wrong week for any other day (I added a Monday and a Sunday to the test, saw it fail, and wrote getWeekRange by hand); my edit then left the old function in the file and put ORDER BY on the wrong query (fixed, commit amended); a new session wrote a plan instead of the page; the agent again read files in checks/; workstation names are not trimmed, so " W4" and "W4" count as different names (kept); the staff page puts "Lab " in front of every lab name (kept). Commenting out the staff check in getLabUsage made AC-27 and AC-28 fail, so the tests bite.
+- Changed by hand: the Monday and Sunday cases in the AC-10 service test, getWeekRange, ORDER BY on the usage query, and a check in the browser as staff (W4 added, a second W4 refused with 409, an empty name refused) and as a student (/staff answers Forbidden).
 
 ### Plan (after review)
 1. NotStaff, InvalidInput and DuplicateWorkstation; the SQL in src/db/labs.js; addWorkstation(user, labId, name) and getLabUsage(user, weekDate) in src/services/labService.js, which throw NotStaff for a student; tests in src/services/labService.test.mjs. No migration.
