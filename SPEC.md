@@ -148,34 +148,34 @@ This slice implements AC-9, AC-11 and AC-12 from the project criteria above. The
 <!-- Filled in from Exercise 3 onward: each AC id, and the test that names it. -->
 | Criterion | Test |
 | --- | --- |
-| AC-1 | |
-| AC-2 | |
-| AC-3 | |
-| AC-4 | |
-| AC-5 | |
-| AC-6 | |
-| AC-7 | |
-| AC-8 | |
-| AC-9 | |
-| AC-10 | |
-| AC-11 | |
-| AC-12 | |
-| AC-13 | |
-| AC-14 | |
-| AC-15 | |
-| AC-16 | |
-| AC-17 | |
-| AC-18 | |
-| AC-19 | |
-| AC-20 | |
-| AC-21 | |
-| AC-22 | |
-| AC-23 | |
-| AC-24 | |
-| AC-25 | |
-| AC-26 | |
-| AC-27 | |
-| AC-28 | |
+| AC-1 | `src/server.test.mjs` |
+| AC-2 | `src/server.test.mjs` |
+| AC-3 | `src/server.test.mjs`, `src/services/bookingService.test.mjs` |
+| AC-4 | `src/server.test.mjs` |
+| AC-5 | `src/server.test.mjs` |
+| AC-6 | `src/server.test.mjs` |
+| AC-7 | `src/server.test.mjs` |
+| AC-8 | `src/server.test.mjs`, `src/services/bookingService.test.mjs` |
+| AC-9 | `src/services/calendarService.test.mjs`, `src/server.test.mjs` |
+| AC-10 | `src/server.test.mjs`, `src/services/labService.test.mjs` |
+| AC-11 | `src/services/authService.test.mjs` |
+| AC-12 | `src/pages.test.mjs` and a check at 375 px in the browser |
+| AC-13 | `src/server.test.mjs` |
+| AC-14 | `src/server.test.mjs` |
+| AC-15 | `src/server.test.mjs` |
+| AC-16 | `src/services/search.test.mjs`, `src/server.test.mjs` |
+| AC-17 | `src/services/search.test.mjs` |
+| AC-18 | `mcp-server/tools.test.mjs` |
+| AC-19 | `src/server.test.mjs` |
+| AC-20 | `src/server.test.mjs` |
+| AC-21 | `src/services/search.test.mjs` |
+| AC-22 | `src/services/search.test.mjs` |
+| AC-23 | `mcp-server/tools.test.mjs` |
+| AC-24 | `mcp-server/tools.test.mjs`, `src/services/bookingService.test.mjs` |
+| AC-25 | `mcp-server/tools.test.mjs` |
+| AC-26 | `mcp-server/tools.test.mjs` |
+| AC-27 | `src/server.test.mjs`, `src/services/labService.test.mjs` |
+| AC-28 | `mcp-server/tools.test.mjs` |
 
 
 ## Spec vs result
