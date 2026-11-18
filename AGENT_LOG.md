@@ -156,6 +156,6 @@ Changed in review: the first plan added labs (POST /api/labs), which no criterio
 - Goal: the last three criteria without a test: AC-9 (Add to Google Calendar), AC-11 (Google sign-in lands in the same account) and AC-12 (booking on a 375-pixel-wide screen).
 - Autonomy: checkpointed autonomy, one step at a time; the same checkpoints as slice 5.
 - Plan (written by me, not by the agent, because the three parts are small and independent): 1. findOrCreateGoogleUser in authService.js with service tests (AC-11); 2. a calendar link service, the link next to a student's own booking, with tests (AC-9); 3. a structural test for the pages and a check at 375 pixels in the browser (AC-12, by hand).
-- Delegated: (filled in at the end of the session)
-- Went wrong: (filled in at the end of the session)
-- Changed by hand: (filled in at the end of the session)
+- Delegated: findOrCreateGoogleUser with its tests, and the calendar link with its tests and the link on the booking screen.
+- Went wrong: the AC-11 test did not cover the real attack, an unverified Google e-mail that matches an existing account, so I added that case by hand; the agent had to fix a missing lab_id in its own new AC-9 test; the calendar link makes its slot taller, so the other Book buttons in that row move down (kept, cosmetic); nothing checks a real 375-pixel screen automatically, so AC-12 is a structural test plus a check in the browser.
+- Changed by hand: the unverified e-mail case in the AC-11 test, src/pages.test.mjs for AC-12, and two checks in the browser: the calendar link opens Google Calendar with the lab, the workstation and the right time, and at 375 pixels (iPhone SE in the responsive mode of Safari) a slot can be booked without scrolling sideways.
