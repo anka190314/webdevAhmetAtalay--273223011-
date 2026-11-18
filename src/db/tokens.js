@@ -1,16 +1,16 @@
-import { db } from './database.js';
+import { query } from './database.js';
 
-export function insertTokenRecord(userId, tokenHash) {
-  const stmt = db.prepare('INSERT INTO mcp_tokens (user_id, token_hash) VALUES (?, ?)');
-  return stmt.run(userId, tokenHash);
+export async function insertTokenRecord(userId, tokenHash) {
+  const res = await query('INSERT INTO mcp_tokens (user_id, token_hash) VALUES ($1, $2) RETURNING id', [userId, tokenHash]);
+  return { id: res.rows[0].id };
 }
 
-export function getUserByTokenHash(tokenHash) {
-  const stmt = db.prepare(`
+export async function getUserByTokenHash(tokenHash) {
+  const res = await query(`
     SELECT u.id, u.email, u.role, u.google_id
     FROM mcp_tokens t
     JOIN users u ON t.user_id = u.id
-    WHERE t.token_hash = ?
-  `);
-  return stmt.get(tokenHash) || null;
+    WHERE t.token_hash = $1
+  `, [tokenHash]);
+  return res.rows[0] || null;
 }

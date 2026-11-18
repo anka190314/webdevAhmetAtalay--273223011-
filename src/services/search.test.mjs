@@ -1,18 +1,23 @@
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert';
-import fs from 'node:fs';
+import { createTestSchema } from '../../test/db.mjs';
 
-const tmpDb = `/tmp/search_test_${Date.now()}_${Math.random()}.db`;
-process.env.DB_PATH = tmpDb;
+const { url, drop } = await createTestSchema();
+process.env.DATABASE_URL = url;
 
-const { initDb, db } = await import('../db/database.js');
+const { initDb, pool, query } = await import('../db/database.js');
 const { createSearch } = await import('./search.js');
+
+after(async () => {
+  await pool.end();
+  await drop();
+});
 
 test('Search Service tests', async (t) => {
   await initDb();
 
-  // Get a valid lab id from seed data
-  const lab = db.prepare('SELECT id FROM labs LIMIT 1').get();
+  const labRes = await query('SELECT id FROM labs LIMIT 1');
+  const lab = labRes.rows[0];
   const labId = lab ? lab.id : 1;
 
   const fallbackMsg = 'Could not understand the request, please choose the day and time yourself';
@@ -127,10 +132,4 @@ test('Search Service tests', async (t) => {
     assert.strictEqual(called, false);
     assert.deepStrictEqual(res, { message: fallbackMsg });
   });
-
-  try {
-    if (fs.existsSync(tmpDb)) fs.unlinkSync(tmpDb);
-    if (fs.existsSync(tmpDb + '-wal')) fs.unlinkSync(tmpDb + '-wal');
-    if (fs.existsSync(tmpDb + '-shm')) fs.unlinkSync(tmpDb + '-shm');
-  } catch (e) {}
 });

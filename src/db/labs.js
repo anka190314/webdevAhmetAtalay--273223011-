@@ -1,40 +1,39 @@
-import { db } from './database.js';
+import { query } from './database.js';
 
-export function getLabsWithWorkstationsFromDb() {
-  const stmt = db.prepare(`
-    SELECT labs.id, labs.name, COUNT(workstations.id) AS workstation_count
+export async function getLabsWithWorkstationsFromDb() {
+  const res = await query(`
+    SELECT labs.id, labs.name, COUNT(workstations.id)::int AS workstation_count
     FROM labs
     LEFT JOIN workstations ON labs.id = workstations.lab_id
     GROUP BY labs.id, labs.name
     ORDER BY labs.id
   `);
-  return stmt.all();
+  return res.rows;
 }
 
-export function getLabById(labId) {
-  const stmt = db.prepare('SELECT id, name FROM labs WHERE id = ?');
-  return stmt.get(labId) || null;
+export async function getLabById(labId) {
+  const res = await query('SELECT id, name FROM labs WHERE id = $1', [labId]);
+  return res.rows[0] || null;
 }
 
-export function getWorkstationByNameAndLab(labId, name) {
-  const stmt = db.prepare('SELECT id, lab_id, name FROM workstations WHERE lab_id = ? AND name = ?');
-  return stmt.get(labId, name) || null;
+export async function getWorkstationByNameAndLab(labId, name) {
+  const res = await query('SELECT id, lab_id, name FROM workstations WHERE lab_id = $1 AND name = $2', [labId, name]);
+  return res.rows[0] || null;
 }
 
-export function insertWorkstation(labId, name) {
-  const stmt = db.prepare('INSERT INTO workstations (lab_id, name) VALUES (?, ?)');
-  const info = stmt.run(labId, name);
-  return { id: info.lastInsertRowid, lab_id: labId, name };
+export async function insertWorkstation(labId, name) {
+  const res = await query('INSERT INTO workstations (lab_id, name) VALUES ($1, $2) RETURNING id', [labId, name]);
+  return { id: res.rows[0].id, lab_id: labId, name };
 }
 
-export function getLabUsageFromDb(startDate, endDate) {
-  const stmt = db.prepare(`
-    SELECT labs.id, labs.name, COUNT(bookings.id) AS booking_count
+export async function getLabUsageFromDb(startDate, endDate) {
+  const res = await query(`
+    SELECT labs.id, labs.name, COUNT(bookings.id)::int AS booking_count
     FROM labs
     LEFT JOIN workstations ON labs.id = workstations.lab_id
-    LEFT JOIN bookings ON workstations.id = bookings.workstation_id AND bookings.date >= ? AND bookings.date <= ?
+    LEFT JOIN bookings ON workstations.id = bookings.workstation_id AND bookings.date >= $1 AND bookings.date <= $2
     GROUP BY labs.id, labs.name
     ORDER BY labs.id
-  `);
-  return stmt.all(startDate, endDate);
+  `, [startDate, endDate]);
+  return res.rows;
 }

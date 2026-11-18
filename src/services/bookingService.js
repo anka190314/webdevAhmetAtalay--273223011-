@@ -50,23 +50,23 @@ function validateSlot(slot) {
   }
 }
 
-export function getLab(labId) {
-  const lab = getLabById(labId);
+export async function getLab(labId) {
+  const lab = await getLabById(labId);
   if (!lab) {
     throw new LabNotFound('Lab not found');
   }
   return lab;
 }
 
-export function getWorkstationSlots(labId, date, userId) {
+export async function getWorkstationSlots(labId, date, userId) {
   validateDate(date);
-  const lab = getLabById(labId);
+  const lab = await getLabById(labId);
   if (!lab) {
     throw new LabNotFound('Lab not found');
   }
 
-  const workstations = getWorkstationsForLab(labId);
-  const bookings = getBookingsForLab(labId, date);
+  const workstations = await getWorkstationsForLab(labId);
+  const bookings = await getBookingsForLab(labId, date);
 
   // Map bookings by workstation_id and slot
   const bookingMap = new Map();
@@ -109,38 +109,35 @@ export function getWorkstationSlots(labId, date, userId) {
   });
 }
 
-export function createBooking(userId, workstationId, date, slot) {
+export async function createBooking(userId, workstationId, date, slot) {
   validateDate(date);
   validateSlot(slot);
 
-  const ws = getWorkstationById(workstationId);
+  const ws = await getWorkstationById(workstationId);
   if (!ws) {
     throw new WorkstationNotFound('Workstation not found');
   }
 
   try {
-    const result = insertBooking(userId, workstationId, date, slot);
-    return { id: result.lastInsertRowid, userId, workstationId, date, slot };
+    const result = await insertBooking(userId, workstationId, date, slot);
+    return { id: result.id, userId, workstationId, date, slot };
   } catch (err) {
-    if (
-      err.code === 'SQLITE_CONSTRAINT' ||
-      (err.message && err.message.includes('UNIQUE constraint failed'))
-    ) {
+    if (err.code === '23505') {
       throw new BookingConflict('This slot is already booked');
     }
     throw err;
   }
 }
 
-export function cancelBooking(userId, bookingId) {
-  const booking = getBooking(bookingId);
+export async function cancelBooking(userId, bookingId) {
+  const booking = await getBooking(bookingId);
   if (!booking) {
     throw new BookingNotFound('Booking not found');
   }
   if (booking.user_id !== userId) {
     throw new NotOwner('Not authorized to cancel this booking');
   }
-  deleteBooking(bookingId);
+  await deleteBooking(bookingId);
 }
 
 function getLocalDateString(date = new Date()) {
@@ -150,6 +147,6 @@ function getLocalDateString(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
-export function getUpcomingBookingsForUser(userId, today = getLocalDateString()) {
+export async function getUpcomingBookingsForUser(userId, today = getLocalDateString()) {
   return getUpcomingBookingsForUserDb(userId, today);
 }

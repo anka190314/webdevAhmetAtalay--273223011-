@@ -1,37 +1,45 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert';
-import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createTestSchema } from '../test/db.mjs';
+
+const { url, drop } = await createTestSchema();
+process.env.DATABASE_URL = url;
 
 const serverPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.js');
 
-const tmpDb = `/tmp/mcp_test_${Date.now()}_${Math.random()}.db`;
-process.env.DB_PATH = tmpDb;
-
-const { initDb, db } = await import('../src/db/database.js');
+const { initDb, pool, query } = await import('../src/db/database.js');
 const { generateToken } = await import('../src/services/tokenService.js');
 const { getWorkstationSlots, createBooking } = await import('../src/services/bookingService.js');
 const { getLabUsage } = await import('../src/services/labService.js');
 
 await initDb();
 
-const student1 = db.prepare('SELECT id FROM users WHERE role = ?').get('student');
-const student2Id = db.prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)')
-  .run('student2@example.com', 'x', 'student').lastInsertRowid;
+const student1Res = await query('SELECT id FROM users WHERE role = $1', ['student']);
+const student1 = student1Res.rows[0];
+
+const student2Res = await query('INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3) RETURNING id',
+  ['student2@example.com', 'x', 'student']);
+const student2Id = student2Res.rows[0].id;
+
 const token1 = await generateToken(student1.id);
 const token2 = await generateToken(student2Id);
-const staff = db.prepare('SELECT * FROM users WHERE role = ?').get('staff');
+
+const staffRes = await query('SELECT * FROM users WHERE role = $1', ['staff']);
+const staff = staffRes.rows[0];
 const staffToken = await generateToken(staff.id);
-const ws = db.prepare('SELECT id, name, lab_id FROM workstations LIMIT 1').get();
+
+const wsRes = await query('SELECT id, name, lab_id FROM workstations LIMIT 1');
+const ws = wsRes.rows[0];
 const date = '2030-01-01'; // a Tuesday, always in the future
 
-const count = () => db.prepare('SELECT COUNT(*) AS c FROM bookings').get().c;
+const count = async () => (await query('SELECT COUNT(*)::int AS c FROM bookings')).rows[0].c;
 
 function startServer(token) {
-  const env = { ...process.env, DB_PATH: tmpDb, MCP_TOKEN: token };
+  const env = { ...process.env, DATABASE_URL: url, MCP_TOKEN: token };
   if (token === undefined) delete env.MCP_TOKEN;
   const child = spawn(process.execPath, [serverPath], { env, stdio: ['pipe', 'pipe', 'pipe'] });
   const waiting = new Map();
@@ -67,14 +75,13 @@ async function withServer(token, fn) {
   }
 }
 
-after(() => {
-  for (const f of [tmpDb, `${tmpDb}-wal`, `${tmpDb}-shm`]) {
-    try { fs.unlinkSync(f); } catch {}
-  }
+after(async () => {
+  await pool.end();
+  await drop();
 });
 
 test('AC-26 a tool call with a missing or unknown token returns an error result and changes nothing', async () => {
-  const before = count();
+  const before = await count();
   for (const token of [undefined, 'not-a-real-token']) {
     await withServer(token, async (server) => {
       const result = await server.callTool('book_slot', { workstation_id: ws.id, date: '2030-01-02', slot: 5 });
@@ -82,7 +89,7 @@ test('AC-26 a tool call with a missing or unknown token returns an error result 
       assert.strictEqual(result.content[0].text, 'Missing or unknown MCP token');
     });
   }
-  assert.strictEqual(count(), before);
+  assert.strictEqual(await count(), before);
 });
 
 test('AC-25 book_slot with a valid token books a free slot for the token owner', async () => {
@@ -90,23 +97,24 @@ test('AC-25 book_slot with a valid token books a free slot for the token owner',
     const result = await server.callTool('book_slot', { workstation_id: ws.id, date, slot: 0 });
     assert.notStrictEqual(result.isError, true);
   });
-  const row = db.prepare('SELECT user_id FROM bookings WHERE workstation_id = ? AND date = ? AND slot = ?').get(ws.id, date, 0);
+  const rowRes = await query('SELECT user_id FROM bookings WHERE workstation_id = $1 AND date = $2 AND slot = $3', [ws.id, date, 0]);
+  const row = rowRes.rows[0];
   assert.ok(row);
   assert.strictEqual(row.user_id, student1.id);
 });
 
 test('AC-18 book_slot refuses a booked slot with "This slot is already booked"', async () => {
-  const before = count();
+  const before = await count();
   await withServer(token2, async (server) => {
     const result = await server.callTool('book_slot', { workstation_id: ws.id, date, slot: 0 });
     assert.strictEqual(result.isError, true);
     assert.strictEqual(result.content[0].text, 'This slot is already booked');
   });
-  assert.strictEqual(count(), before);
+  assert.strictEqual(await count(), before);
 });
 
 test('AC-23 free_workstations lists the same free workstations as the booking screen', async () => {
-  const expected = getWorkstationSlots(ws.lab_id, date, student1.id);
+  const expected = await getWorkstationSlots(ws.lab_id, date, student1.id);
   await withServer(token1, async (server) => {
     const result = await server.callTool('free_workstations', { lab_id: ws.lab_id, date });
     assert.notStrictEqual(result.isError, true);
@@ -120,7 +128,7 @@ test('AC-23 free_workstations lists the same free workstations as the booking sc
 });
 
 test("AC-24 my_bookings lists only the token owner's upcoming bookings", async () => {
-  createBooking(student2Id, ws.id, date, 3);
+  await createBooking(student2Id, ws.id, date, 3);
   await withServer(token1, async (server) => {
     const result = await server.callTool('my_bookings', {});
     assert.notStrictEqual(result.isError, true);
@@ -130,7 +138,7 @@ test("AC-24 my_bookings lists only the token owner's upcoming bookings", async (
 });
 
 test("AC-28 lab_usage with staff token returns lab usage and with student token returns error", async () => {
-  const expected = getLabUsage(staff, '2030-01-01');
+  const expected = await getLabUsage(staff, '2030-01-01');
   await withServer(staffToken, async (server) => {
     const result = await server.callTool('lab_usage', { week: '2030-01-01' });
     assert.notStrictEqual(result.isError, true);

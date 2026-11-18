@@ -38,9 +38,9 @@ router.get('/labs', requireAuthPage, (req, res) => {
   res.sendFile(path.join(publicDir, 'labs.html'));
 });
 
-router.get('/labs/:id', requireAuthPage, (req, res) => {
+router.get('/labs/:id', requireAuthPage, async (req, res) => {
   try {
-    getLab(req.params.id);
+    await getLab(req.params.id);
     res.sendFile(path.join(publicDir, 'lab.html'));
   } catch (err) {
     if (err instanceof LabNotFound) {
@@ -50,16 +50,16 @@ router.get('/labs/:id', requireAuthPage, (req, res) => {
   }
 });
 
-router.get('/api/labs', requireAuthApi, (req, res) => {
-  const labs = getLabsWithWorkstations();
+router.get('/api/labs', requireAuthApi, async (req, res) => {
+  const labs = await getLabsWithWorkstations();
   res.json(labs);
 });
 
-router.get('/api/labs/:id/slots', requireAuthApi, (req, res) => {
+router.get('/api/labs/:id/slots', requireAuthApi, async (req, res) => {
   try {
     const labId = parseInt(req.params.id, 10);
     const date = req.query.date;
-    const slots = getWorkstationSlots(labId, date, req.session.userId);
+    const slots = await getWorkstationSlots(labId, date, req.session.userId);
     res.json(slots);
   } catch (err) {
     if (err instanceof InvalidBooking) {
@@ -72,10 +72,10 @@ router.get('/api/labs/:id/slots', requireAuthApi, (req, res) => {
   }
 });
 
-router.post('/api/bookings', requireAuthApi, (req, res) => {
+router.post('/api/bookings', requireAuthApi, async (req, res) => {
   try {
     const { workstationId, date, slot } = req.body;
-    const booking = createBooking(req.session.userId, workstationId, date, slot);
+    const booking = await createBooking(req.session.userId, workstationId, date, slot);
     res.status(201).json(booking);
   } catch (err) {
     if (err instanceof InvalidBooking) {
@@ -91,10 +91,10 @@ router.post('/api/bookings', requireAuthApi, (req, res) => {
   }
 });
 
-router.delete('/api/bookings/:id', requireAuthApi, (req, res) => {
+router.delete('/api/bookings/:id', requireAuthApi, async (req, res) => {
   try {
     const bookingId = parseInt(req.params.id, 10);
-    cancelBooking(req.session.userId, bookingId);
+    await cancelBooking(req.session.userId, bookingId);
     res.status(204).send();
   } catch (err) {
     if (err instanceof BookingNotFound) {

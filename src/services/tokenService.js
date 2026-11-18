@@ -5,7 +5,7 @@ import { getUserByEmail } from '../db/users.js';
 export async function generateToken(userId) {
   const token = crypto.randomBytes(32).toString('hex');
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  insertTokenRecord(userId, tokenHash);
+  await insertTokenRecord(userId, tokenHash);
   return token;
 }
 
@@ -18,7 +18,7 @@ export async function resolveToken(token) {
 }
 
 export async function createTokenForEmail(email) {
-  const user = getUserByEmail(email);
+  const user = await getUserByEmail(email);
   if (!user) {
     return null;
   }

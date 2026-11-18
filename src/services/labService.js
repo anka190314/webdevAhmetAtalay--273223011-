@@ -12,7 +12,7 @@ import {
   LabNotFound
 } from './errors.js';
 
-export function getLabsWithWorkstations() {
+export async function getLabsWithWorkstations() {
   return getLabsWithWorkstationsFromDb();
 }
 
@@ -39,25 +39,25 @@ function getWeekRange(dateStr) {
   return { monday: getLocalDateString(monday), sunday: getLocalDateString(sunday) };
 }
 
-export function addWorkstation(user, labId, name) {
+export async function addWorkstation(user, labId, name) {
   if (!user || user.role !== 'staff') {
     throw new NotStaff('Not staff');
   }
-  const lab = getLabById(labId);
+  const lab = await getLabById(labId);
   if (!lab) {
     throw new LabNotFound('Lab not found');
   }
   if (!name || typeof name !== 'string' || name.trim() === '') {
     throw new InvalidInput('Invalid workstation name');
   }
-  const existing = getWorkstationByNameAndLab(labId, name);
+  const existing = await getWorkstationByNameAndLab(labId, name);
   if (existing) {
     throw new DuplicateWorkstation('Workstation already exists in this lab');
   }
   return insertWorkstation(labId, name);
 }
 
-export function getLabUsage(user, weekDate) {
+export async function getLabUsage(user, weekDate) {
   if (!user || user.role !== 'staff') {
     throw new NotStaff('Not staff');
   }

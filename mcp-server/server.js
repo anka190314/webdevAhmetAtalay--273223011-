@@ -3,10 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
 
-if (!process.env.DB_PATH) {
-  process.env.DB_PATH = path.join(__dirname, "..", "data", "app.db");
-}
-
 const LECTURES_FILE = path.join(__dirname, "lectures.json");
 const TIMETABLE_FILE = path.join(__dirname, "timetable.json");
 
@@ -211,7 +207,7 @@ rl.on("line", (line) => {
           }
 
           if (name === "free_workstations") {
-            const workstationSlots = getWorkstationSlots(args.lab_id, args.date, user.id);
+            const workstationSlots = await getWorkstationSlots(args.lab_id, args.date, user.id);
             const resultSlots = [];
             for (let slot = 0; slot < 6; slot++) {
               const free = workstationSlots
@@ -225,13 +221,13 @@ rl.on("line", (line) => {
             }
             toolResult(msg.id, JSON.stringify(resultSlots), false);
           } else if (name === "my_bookings") {
-            const bookings = getUpcomingBookingsForUser(user.id);
+            const bookings = await getUpcomingBookingsForUser(user.id);
             toolResult(msg.id, JSON.stringify(bookings), false);
           } else if (name === "book_slot") {
-            const booking = createBooking(user.id, args.workstation_id, args.date, args.slot);
+            const booking = await createBooking(user.id, args.workstation_id, args.date, args.slot);
             toolResult(msg.id, JSON.stringify(booking), false);
           } else if (name === "lab_usage") {
-            const usage = getLabUsage(user, args.week);
+            const usage = await getLabUsage(user, args.week);
             toolResult(msg.id, JSON.stringify(usage), false);
           }
         } catch (err) {

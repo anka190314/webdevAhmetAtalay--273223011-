@@ -1,7 +1,7 @@
 import { initDb } from './db/database.js';
 import app from './app.js';
 
-const REQUIRED = ['SESSION_SECRET'];
+const REQUIRED = ['SESSION_SECRET', 'DATABASE_URL'];
 
 for (const name of REQUIRED) {
   if (!process.env[name]) {

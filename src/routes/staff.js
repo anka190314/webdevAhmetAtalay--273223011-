@@ -23,23 +23,23 @@ function requireAuthApi(req, res, next) {
   res.status(401).json({ error: 'Unauthorized' });
 }
 
-router.get('/staff', (req, res) => {
+router.get('/staff', async (req, res) => {
   if (!req.session || !req.session.userId) {
     return res.redirect('/login');
   }
-  const user = getServiceUserById(req.session.userId);
+  const user = await getServiceUserById(req.session.userId);
   if (!user || user.role !== 'staff') {
     return res.status(403).send('Forbidden');
   }
   res.sendFile(path.join(publicDir, 'staff.html'));
 });
 
-router.post('/api/labs/:id/workstations', requireAuthApi, (req, res) => {
+router.post('/api/labs/:id/workstations', requireAuthApi, async (req, res) => {
   try {
-    const user = getServiceUserById(req.session.userId);
+    const user = await getServiceUserById(req.session.userId);
     const labId = parseInt(req.params.id, 10);
     const { name } = req.body;
-    const workstation = addWorkstation(user, labId, name);
+    const workstation = await addWorkstation(user, labId, name);
     res.status(201).json(workstation);
   } catch (err) {
     if (err instanceof NotStaff) {
@@ -58,11 +58,11 @@ router.post('/api/labs/:id/workstations', requireAuthApi, (req, res) => {
   }
 });
 
-router.get('/api/usage', requireAuthApi, (req, res) => {
+router.get('/api/usage', requireAuthApi, async (req, res) => {
   try {
-    const user = getServiceUserById(req.session.userId);
+    const user = await getServiceUserById(req.session.userId);
     const week = req.query.week;
-    const usage = getLabUsage(user, week);
+    const usage = await getLabUsage(user, week);
     res.json(usage);
   } catch (err) {
     if (err instanceof NotStaff) {

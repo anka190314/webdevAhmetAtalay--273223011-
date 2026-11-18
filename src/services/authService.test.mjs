@@ -1,20 +1,28 @@
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert';
-import fs from 'node:fs';
+import { createTestSchema } from '../../test/db.mjs';
 
-const tmpDb = `/tmp/auth_test_${Date.now()}_${Math.random()}.db`;
-process.env.DB_PATH = tmpDb;
+const { url, drop } = await createTestSchema();
+process.env.DATABASE_URL = url;
 
-const { initDb, db } = await import('../db/database.js');
+const { initDb, pool, query } = await import('../db/database.js');
 const { findOrCreateGoogleUser } = await import('./authService.js');
 const { EmailNotVerified } = await import('./errors.js');
+
+after(async () => {
+  await pool.end();
+  await drop();
+});
 
 test('AC-11 Google auth and linking', async () => {
   await initDb();
 
-  const seededStudent = db.prepare('SELECT * FROM users WHERE role = ?').get('student');
+  const seededStudentRes = await query('SELECT * FROM users WHERE role = $1', ['student']);
+  const seededStudent = seededStudentRes.rows[0];
   assert.ok(seededStudent, 'Seeded student exists');
-  const initialCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+
+  const initialCountRes = await query('SELECT COUNT(*)::int as count FROM users');
+  const initialCount = initialCountRes.rows[0].count;
 
   // 1. Seeded student signs in with Google with the same e-mail and gets the same id, and the users count does not change
   const user1 = await findOrCreateGoogleUser({
@@ -23,7 +31,8 @@ test('AC-11 Google auth and linking', async () => {
     emailVerified: true
   });
   assert.strictEqual(user1.id, seededStudent.id);
-  const countAfter1 = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  const countAfter1Res = await query('SELECT COUNT(*)::int as count FROM users');
+  const countAfter1 = countAfter1Res.rows[0].count;
   assert.strictEqual(countAfter1, initialCount);
 
   // 2. A second call with the same sub returns the same user
@@ -33,7 +42,8 @@ test('AC-11 Google auth and linking', async () => {
     emailVerified: true
   });
   assert.strictEqual(user2.id, seededStudent.id);
-  const countAfter2 = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  const countAfter2Res = await query('SELECT COUNT(*)::int as count FROM users');
+  const countAfter2 = countAfter2Res.rows[0].count;
   assert.strictEqual(countAfter2, initialCount);
 
   // 3. An unverified e-mail throws EmailNotVerified and nothing is linked
@@ -48,12 +58,14 @@ test('AC-11 Google auth and linking', async () => {
     assert.strictEqual(err instanceof EmailNotVerified, true);
     return true;
   });
-  const unlinkedUser = db.prepare('SELECT * FROM users WHERE email = ?').get(unverifiedEmail);
+  const unlinkedUserRes = await query('SELECT * FROM users WHERE email = $1', [unverifiedEmail]);
+  const unlinkedUser = unlinkedUserRes.rows[0];
   assert.strictEqual(unlinkedUser, undefined);
 
   // 4. A new e-mail creates exactly one student
   const newEmail = 'newstudent@example.com';
-  const newCountBefore = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  const newCountBeforeRes = await query('SELECT COUNT(*)::int as count FROM users');
+  const newCountBefore = newCountBeforeRes.rows[0].count;
   const newUser = await findOrCreateGoogleUser({
     sub: 'google-sub-new',
     email: newEmail,
@@ -63,20 +75,17 @@ test('AC-11 Google auth and linking', async () => {
   assert.strictEqual(newUser.email, newEmail);
   assert.strictEqual(newUser.role, 'student');
   assert.ok(newUser.id);
-  const newCountAfter = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  const newCountAfterRes = await query('SELECT COUNT(*)::int as count FROM users');
+  const newCountAfter = newCountAfterRes.rows[0].count;
   assert.strictEqual(newCountAfter, newCountBefore + 1);
 
   // 5. An unverified Google e-mail never links to an existing account
-  const staff = db.prepare('SELECT * FROM users WHERE role = ?').get('staff');
+  const staffRes = await query('SELECT * FROM users WHERE role = $1', ['staff']);
+  const staff = staffRes.rows[0];
   await assert.rejects(
     () => findOrCreateGoogleUser({ sub: 'google-sub-attacker', email: staff.email, emailVerified: false }),
     (err) => err instanceof EmailNotVerified
   );
-  assert.strictEqual(db.prepare('SELECT google_id FROM users WHERE id = ?').get(staff.id).google_id, null);
-
-  try {
-    if (fs.existsSync(tmpDb)) fs.unlinkSync(tmpDb);
-    if (fs.existsSync(tmpDb + '-wal')) fs.unlinkSync(tmpDb + '-wal');
-    if (fs.existsSync(tmpDb + '-shm')) fs.unlinkSync(tmpDb + '-shm');
-  } catch (e) {}
+  const staffCheckRes = await query('SELECT google_id FROM users WHERE id = $1', [staff.id]);
+  assert.strictEqual(staffCheckRes.rows[0].google_id, null);
 });

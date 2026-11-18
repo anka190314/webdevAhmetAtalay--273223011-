@@ -1,17 +1,23 @@
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert';
-import fs from 'node:fs';
+import { createTestSchema } from '../../test/db.mjs';
 
-const tmpDb = `/tmp/token_test_${Date.now()}_${Math.random()}.db`;
-process.env.DB_PATH = tmpDb;
+const { url, drop } = await createTestSchema();
+process.env.DATABASE_URL = url;
 
-const { initDb, db } = await import('../db/database.js');
+const { initDb, pool, query } = await import('../db/database.js');
 const { generateToken, resolveToken } = await import('./tokenService.js');
+
+after(async () => {
+  await pool.end();
+  await drop();
+});
 
 test('token service tests', async (t) => {
   await initDb();
 
-  const user = db.prepare('SELECT id FROM users WHERE role = ?').get('student');
+  const userRes = await query('SELECT id FROM users WHERE role = $1', ['student']);
+  const user = userRes.rows[0];
 
   await t.test('a created token resolves to its user', async () => {
     const token = await generateToken(user.id);
@@ -36,7 +42,8 @@ test('token service tests', async (t) => {
 
   await t.test('the mcp_tokens table holds only the hash, never the token', async () => {
     const token = await generateToken(user.id);
-    const rows = db.prepare('SELECT * FROM mcp_tokens').all();
+    const rowsRes = await query('SELECT * FROM mcp_tokens');
+    const rows = rowsRes.rows;
     assert.ok(rows.length > 0);
     for (const row of rows) {
       for (const val of Object.values(row)) {
@@ -46,10 +53,4 @@ test('token service tests', async (t) => {
       }
     }
   });
-
-  try {
-    if (fs.existsSync(tmpDb)) fs.unlinkSync(tmpDb);
-    if (fs.existsSync(tmpDb + '-wal')) fs.unlinkSync(tmpDb + '-wal');
-    if (fs.existsSync(tmpDb + '-shm')) fs.unlinkSync(tmpDb + '-shm');
-  } catch (e) {}
 });

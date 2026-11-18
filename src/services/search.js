@@ -48,7 +48,7 @@ export function createSearch({
       return { message: FALLBACK_MESSAGE };
     }
 
-    const labs = getLabsWithWorkstations();
+    const labs = await getLabsWithWorkstations();
     const todayDateObj = now();
     const y = todayDateObj.getFullYear();
     const m = String(todayDateObj.getMonth() + 1).padStart(2, '0');
