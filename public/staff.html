@@ -1,9 +1,232 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Staff - TU Sofia Lab Booking</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    h1 { font-size: 22px; margin: 0; }
+    h2 { font-size: 18px; margin-top: 0; margin-bottom: 12px; }
+    .nav-links { display: flex; gap: 10px; align-items: center; }
+    .btn { background: #0275d8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 14px; }
+    .btn:hover { background: #025aa5; }
+    .btn-danger { background: #d9534f; }
+    .btn-danger:hover { background: #c9302c; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .section { margin-bottom: 24px; padding: 16px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa; }
+    .form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+    label { font-weight: bold; font-size: 14px; }
+    input[type="text"], select, input[type="date"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    #error-banner { background: #f8d7da; color: #721c24; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; display: none; }
+    #success-banner { background: #d4edda; color: #155724; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+    th { background: #f0f0f0; font-weight: bold; }
+    #loading, #empty { text-align: center; color: #666; padding: 20px 0; font-size: 14px; }
+  </style>
 </head>
 <body>
-  <h1>Staff</h1>
+  <div class="container">
+    <header>
+      <h1>Staff Dashboard</h1>
+      <div class="nav-links">
+        <a href="/labs" class="btn btn-secondary">Back to Labs</a>
+        <form action="/logout" method="POST" style="margin: 0;">
+          <button type="submit" class="btn btn-danger">Sign Out</button>
+        </form>
+      </div>
+    </header>
+
+    <div id="error-banner"></div>
+    <div id="success-banner"></div>
+
+    <div class="section">
+      <h2>Add Workstation</h2>
+      <form id="add-workstation-form">
+        <div class="form-group">
+          <label for="lab-select">Laboratory</label>
+          <select id="lab-select" required>
+            <option value="">Select a lab...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ws-name-input">Workstation Name</label>
+          <input type="text" id="ws-name-input" required placeholder="e.g. W4">
+        </div>
+        <button type="submit" class="btn">Add Workstation</button>
+      </form>
+    </div>
+
+    <div class="section">
+      <h2>Lab Usage Overview</h2>
+      <div class="form-group" style="max-width: 250px;">
+        <label for="week-picker">Select Date / Week</label>
+        <input type="date" id="week-picker">
+      </div>
+      <div id="loading">Loading usage...</div>
+      <div id="empty" style="display: none;">No usage data available.</div>
+      <div id="table-container" style="overflow-x: auto;">
+        <table id="usage-table" style="display: none;">
+          <thead>
+            <tr>
+              <th>Lab Name</th>
+              <th>Bookings in Week</th>
+            </tr>
+          </thead>
+          <tbody id="usage-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const errorBanner = document.getElementById('error-banner');
+    const successBanner = document.getElementById('success-banner');
+    const labSelect = document.getElementById('lab-select');
+    const addWsForm = document.getElementById('add-workstation-form');
+    const wsNameInput = document.getElementById('ws-name-input');
+    const weekPicker = document.getElementById('week-picker');
+    const loadingEl = document.getElementById('loading');
+    const emptyEl = document.getElementById('empty');
+    const usageTable = document.getElementById('usage-table');
+    const usageTbody = document.getElementById('usage-tbody');
+
+    function getTodayString() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    weekPicker.value = getTodayString();
+
+    function showError(msg) {
+      errorBanner.textContent = msg;
+      errorBanner.style.display = 'block';
+      successBanner.style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+      successBanner.textContent = msg;
+      successBanner.style.display = 'block';
+      errorBanner.style.display = 'none';
+    }
+
+    function clearBanners() {
+      errorBanner.textContent = '';
+      errorBanner.style.display = 'none';
+      successBanner.textContent = '';
+      successBanner.style.display = 'none';
+    }
+
+    async function loadLabs() {
+      try {
+        const res = await fetch('/api/labs');
+        if (!res.ok) throw new Error('Failed to load labs');
+        const labs = await res.json();
+        labSelect.innerHTML = '<option value="">Select a lab...</option>';
+        labs.forEach(lab => {
+          const opt = document.createElement('option');
+          opt.value = lab.id;
+          opt.textContent = `Lab ${lab.name}`;
+          labSelect.appendChild(opt);
+        });
+      } catch (err) {
+        showError('Failed to load laboratories.');
+      }
+    }
+
+    async function loadUsage() {
+      clearBanners();
+      const week = weekPicker.value;
+      if (!week) {
+        loadingEl.style.display = 'none';
+        emptyEl.style.display = 'block';
+        usageTable.style.display = 'none';
+        return;
+      }
+
+      loadingEl.style.display = 'block';
+      emptyEl.style.display = 'none';
+      usageTable.style.display = 'none';
+      usageTbody.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/usage?week=${week}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to load usage data');
+        }
+        const usageData = await res.json();
+        loadingEl.style.display = 'none';
+
+        if (usageData.length === 0) {
+          emptyEl.style.display = 'block';
+          return;
+        }
+
+        usageTable.style.display = 'table';
+        usageData.forEach(row => {
+          const tr = document.createElement('tr');
+
+          const tdName = document.createElement('td');
+          tdName.textContent = `Lab ${row.name}`;
+          tr.appendChild(tdName);
+
+          const tdCount = document.createElement('td');
+          tdCount.textContent = row.booking_count;
+          tr.appendChild(tdCount);
+
+          usageTbody.appendChild(tr);
+        });
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        showError(err.message || 'Error loading usage data.');
+      }
+    }
+
+    addWsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearBanners();
+      const labId = labSelect.value;
+      const name = wsNameInput.value.trim();
+
+      if (!labId) {
+        showError('Please select a lab.');
+        return;
+      }
+      if (!name) {
+        showError('Please enter a workstation name.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/labs/${labId}/workstations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to add workstation');
+        }
+        showSuccess(`Workstation "${name}" added successfully.`);
+        wsNameInput.value = '';
+        loadUsage();
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+
+    weekPicker.addEventListener('change', loadUsage);
+
+    loadLabs();
+    loadUsage();
+  </script>
 </body>
 </html>
