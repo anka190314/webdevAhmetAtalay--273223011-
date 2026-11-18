@@ -7,3 +7,4 @@ export class WorkstationNotFound extends Error {}
 export class NotStaff extends Error {}
 export class InvalidInput extends Error {}
 export class DuplicateWorkstation extends Error {}
+export class EmailNotVerified extends Error {}
