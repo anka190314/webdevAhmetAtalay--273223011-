@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/server.js",
-    "test": "node --test",
+    "test": "node --test \"src/**/*.test.mjs\" \"mcp-server/*.test.mjs\"",
     "mcp": "node mcp-server/server.js",
     "migrate": "node src/db/migrate.js",
     "mcp-token": "node scripts/mcp-token.js"
@@ -28,6 +28,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "express": "^5.3.0",
-    "express-session": "^1.19.0"
+    "express-session": "^1.19.0",
+    "pg": "^8.23.1"
   }
 }
