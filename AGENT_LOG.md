@@ -170,3 +170,12 @@ Changed in review: the first plan added labs (POST /api/labs), which no criterio
 - Went wrong: in the secrets search the agent looked only for Google keys starting with AIza and reported that no real secret exists, but my key starts with AQ.; my own search of the history for that prefix found nothing.
 - Delegated: (filled in at the end of the session)
 - Changed by hand: (filled in at the end of the session)
+
+
+## 2026-11-19 · Exercise 4: health check, Docker and the coverage gate
+- Goal: /health, a 404 and an error handler without stack traces; a Dockerfile; a coverage script with 100% on the service layer and 80% overall, seen to fail once on GitHub Actions.
+- Autonomy: checkpointed autonomy. One small session per group of files, because the free tier allows 250,000 input tokens per minute and every request carries the whole context again.
+- Checkpoints: tests written first and seen to fail; npm run coverage after each file; I counted the asserts and read every new test.
+- Went wrong: the agent discarded the uncommitted changes in Dockerfile and src/server.js with git checkout, without asking. In the bookingService session it overwrote its own NotOwner test while adding others; coverage stayed at 100% because an API test still reached that branch, so coverage could not see the loss. Two of its tests only checked the type of the result (Array.isArray, assert.ok(res)), and one called createSearch() with no model, which can reach the real Gemini API. It changed a line in an existing test (SELECT id to SELECT id, email) against my rule. It also started the pg-test container by itself when the tests failed; harmless, but not asked.
+- Changed by hand: the error log prints err.stack, not the whole error object, because the object of a JSON parse error holds the request body (a password in a broken login request would land in the log); a SIGTERM and SIGINT handler, because Ctrl+C and Render's stop signal did nothing to the container; a smaller .dockerignore; the NotOwner test and a real "today" test back in bookingService.test.mjs; the default-now test in search.test.mjs, with a fake model and no network.
+- Proof: 100% lines, branches and functions on src/services and 92.58% lines overall; test.skip on the authenticateUser test made CI fail with "99.21% line coverage does not meet threshold of 100%" (run 0408c21), and the revert made all four jobs green for the first time (run 836495e).
