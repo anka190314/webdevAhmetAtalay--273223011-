@@ -8,6 +8,12 @@ export const pool = new Pool({
   connectionTimeoutMillis: 2000
 });
 
+// An idle client can lose its connection (a database restart, or Neon scaling to zero).
+// Without a listener, the pool's 'error' event would crash the whole process.
+pool.on('error', (err) => {
+  console.error('Idle database client error:', err.message);
+});
+
 export async function query(text, params) {
   return pool.query(text, params);
 }
