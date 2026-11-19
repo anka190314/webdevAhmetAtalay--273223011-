@@ -11,3 +11,9 @@ checks/
 docs/
 *.md
 **/*.md
+.devcontainer/
+.gemini/
+.github/
+.vscode/
+Dockerfile
+.dockerignore

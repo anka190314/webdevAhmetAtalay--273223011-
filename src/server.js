@@ -18,3 +18,10 @@ await initDb();
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+for (const signal of ['SIGTERM', 'SIGINT']) {
+  process.on(signal, () => {
+    console.error(`${signal} received, shutting down`);
+    process.exit(0);
+  });
+}
