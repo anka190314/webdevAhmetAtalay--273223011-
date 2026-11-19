@@ -28,7 +28,7 @@ Lab booking.
 - No mobile app for iOS or Android: the web UI also works on a phone screen.
 
 ## Constraints
-- Node.js with Express for the REST API; SQLite in development (one file, `data/app.db`), PostgreSQL from Exercise 4; all SQL stays in `src/db/`. Plain HTML, CSS and JavaScript in the UI.- Bookings use fixed 2-hour time slots, Monday to Friday, from 08:00 to 20:00.
+- Node.js with Express for the REST API; PostgreSQL on Neon (Frankfurt) through DATABASE_URL; tests use a throwaway local Postgres, one schema per test file; all SQL stays in `src/db/`. Plain HTML, CSS and JavaScript in the UI.- Bookings use fixed 2-hour time slots, Monday to Friday, from 08:00 to 20:00.
 - Passwords are stored only as a bcrypt hash, never as readable text.
 - Keys and client secrets live only in Codespaces secrets, never in a file in the repository.
 - Every rule about who may do what is checked on the server, not only hidden in the UI.
@@ -84,7 +84,7 @@ One request followed end to end: a student presses "Book" on a free slot.
 - Route: `router.post('/api/bookings')` in `src/routes/labs.js`. `requireAuthApi` answers 401 without a session; the handler reads the body, calls the service and turns its errors into status codes: `InvalidBooking` 422, `BookingConflict` 409, `WorkstationNotFound` 404. It holds no rule.
 - Service: `createBooking()` in `src/services/bookingService.js` holds the rules: a real weekday, a slot from 0 to 5, an existing workstation, and no double booking (a UNIQUE violation becomes `BookingConflict`).
 - Data access: `getWorkstationById()` and `insertBooking()` in `src/db/bookings.js`, the only file with booking SQL, with parameters instead of string building.
-- Database: the `bookings` table in `data/app.db`, created by `migrations/002_bookings.sql` with `UNIQUE(workstation_id, date, slot)`.
+- Database: the `bookings` table in Postgres on Neon, created by `migrations/002_bookings.sql` with `UNIQUE(workstation_id, date, slot)`.
 - Back to the client: 201 with `{ id, userId, workstationId, date, slot }`, or `{ "error": "..." }` with the status code.
 
 **One place that did not match the layering**

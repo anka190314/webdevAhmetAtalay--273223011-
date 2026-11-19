@@ -10,17 +10,19 @@ TU Sofia Lab Booking is a web app where students of the Technical University of 
 - Run: `npm start`
 - Test: `npm test`
 - Migrate: `npm run migrate`
+- Test database, once per codespace start: `docker start pg-test`
+- Create an account: `npm run create-user -- <email> <student|staff>`
 - MCP server: `npm run --silent mcp`
 
 ## Conventions
-- Node.js with Express for the REST API; SQLite in development (one file, `data/app.db`), PostgreSQL from Exercise 4; all SQL stays in `src/db/`. Plain HTML, CSS and JavaScript in the UI.
+- Node.js with Express for the REST API; PostgreSQL on Neon (Frankfurt) through DATABASE_URL; tests use a throwaway local Postgres, one schema per test file; all SQL stays in `src/db/`. Plain HTML, CSS and JavaScript in the UI.
 - The MCP server and the HTTP API call the same functions in `src/services/`; a rule is never written twice.
 
 ## Layers
 - Route handlers: `src/routes/`
 - Services: `src/services/`
 - Data access: `src/db/`
-- Database: `data/app.db` (SQLite in development)
+- Database: Postgres on Neon, through `DATABASE_URL`
 - MCP tools: `mcp-server/server.js`, calling `src/services/`
 
 ## The model feature
