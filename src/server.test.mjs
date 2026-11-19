@@ -499,6 +499,74 @@ test('Server API and Page tests', async (t) => {
     assert.strictEqual(text.includes('at '), false);
   });
 
+  await t.test('Google sign-in: the redirect with S256, 503 without a client id, a wrong or missing state, and a good callback', async () => {
+    const { createHash } = await import('node:crypto');
+    const saved = [['GOOGLE_CLIENT_ID', process.env.GOOGLE_CLIENT_ID], ['GOOGLE_CLIENT_SECRET', process.env.GOOGLE_CLIENT_SECRET], ['PUBLIC_BASE_URL', process.env.PUBLIC_BASE_URL]];
+    const realFetch = globalThis.fetch;
+    process.env.GOOGLE_CLIENT_ID = 'test-client-id';
+    process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
+    process.env.PUBLIC_BASE_URL = 'https://app.example.test';
+    const start = async () => {
+      const res = await fetch(`http://localhost:${port}/api/auth/google`, { redirect: 'manual' });
+      return { res, location: new URL(res.headers.get('location')), cookie: (res.headers.get('set-cookie') || '').split(';')[0] };
+    };
+    try {
+      const first = await start();
+      assert.strictEqual(first.res.status, 302);
+      const p = first.location.searchParams;
+      assert.strictEqual(first.location.origin + first.location.pathname, 'https://accounts.google.com/o/oauth2/v2/auth');
+      assert.strictEqual(p.get('client_id'), 'test-client-id');
+      assert.strictEqual(p.get('redirect_uri'), 'https://app.example.test/api/auth/google/callback');
+      assert.strictEqual(p.get('response_type'), 'code');
+      assert.strictEqual(p.get('scope'), 'openid email');
+      assert.strictEqual(p.get('code_challenge_method'), 'S256');
+      assert.match(p.get('code_challenge'), /^[A-Za-z0-9_-]{43}$/);
+      assert.ok(p.get('state').length >= 32);
+
+      delete process.env.GOOGLE_CLIENT_ID;
+      const off = await fetch(`http://localhost:${port}/api/auth/google`, { redirect: 'manual' });
+      assert.strictEqual(off.status, 503);
+      process.env.GOOGLE_CLIENT_ID = 'test-client-id';
+
+      for (const query of ['code=abc&state=wrong', 'code=abc']) {
+        const flow = await start();
+        const cb = await fetch(`http://localhost:${port}/api/auth/google/callback?${query}`, { redirect: 'manual', headers: { Cookie: flow.cookie } });
+        assert.strictEqual(cb.status, 302);
+        assert.strictEqual(cb.headers.get('location'), '/login?error=google');
+        const labs = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: flow.cookie } });
+        assert.strictEqual(labs.status, 401);
+      }
+
+      const flow = await start();
+      const state = flow.location.searchParams.get('state');
+      const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+      const idToken = [b64({ alg: 'RS256' }), b64({ iss: 'https://accounts.google.com', aud: 'test-client-id', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'google-sub-callback', email: 'google.callback@example.com', email_verified: true }), 'signature'].join('.');
+      let tokenRequest;
+      globalThis.fetch = async (url, options) => {
+        if (String(url) === 'https://oauth2.googleapis.com/token') {
+          tokenRequest = new URLSearchParams(options.body);
+          return new Response(JSON.stringify({ id_token: idToken }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return realFetch(url, options);
+      };
+      const cb = await fetch(`http://localhost:${port}/api/auth/google/callback?code=good-code&state=${state}`, { redirect: 'manual', headers: { Cookie: flow.cookie } });
+      assert.strictEqual(cb.status, 302);
+      assert.strictEqual(cb.headers.get('location'), '/labs');
+      assert.strictEqual(tokenRequest.get('code'), 'good-code');
+      assert.strictEqual(tokenRequest.get('client_secret'), 'test-client-secret');
+      assert.strictEqual(createHash('sha256').update(tokenRequest.get('code_verifier')).digest('base64url'), flow.location.searchParams.get('code_challenge'));
+      const signedIn = (cb.headers.get('set-cookie') || '').split(';')[0];
+      const labs = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: signedIn } });
+      assert.strictEqual(labs.status, 200);
+    } finally {
+      globalThis.fetch = realFetch;
+      for (const [key, value] of saved) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  });
+
   await t.test('AC-14 after signing in with a seeded account, /api/labs lists every seeded lab with its name and number of workstations', async () => {
     const cookie = await getCookie();
     const res = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: cookie } });

@@ -33,9 +33,14 @@
       </div>
       <button type="submit">Sign In</button>
     </form>
-    <button class="google-btn" onclick="alert('Google Sign-In flow placeholder')">Sign in with Google</button>
+    <button class="google-btn" onclick="window.location.href='/api/auth/google'">Sign in with Google</button>
   </div>
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'google') {
+      document.getElementById('error-msg').textContent = 'Google sign-in failed. Please try again.';
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
