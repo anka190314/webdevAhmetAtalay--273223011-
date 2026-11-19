@@ -29,7 +29,20 @@ One row per agent session. In Gemini CLI, type `/stats` before you quit and copy
 | 2026-11-17 | Claude (claude.ai chat, tutor) | — | — | — | |
 | 2026-11-18 | Gemini CLI (gemini-3.5-flash-lite), slice 5 page and slice 6 | not recorded | not recorded | | |
 | 2026-11-18 | Claude (claude.ai chat, tutor) | — | — | — | |
+| 2026-11-18 | Gemini CLI (3.5 Flash-Lite): environment variable inventory | 96 751 (66 913 cached) | 1 116 | | $0.0318 |
+| 2026-11-18 | Gemini CLI: secrets search in the git history | 243 661 (178 985 cached) | 946 | | $0.0755 |
+| 2026-11-18 | Gemini CLI: Postgres plan, review and step A | not recorded | not recorded | | |
+| 2026-11-18 | Gemini CLI: Postgres step B, the switch in one go | 4 084 596 (3 824 717 cached) | 28 257 | | $1.2960 |
+| 2026-11-18 | Gemini CLI: seed split and create-user script | not recorded | not recorded | | |
+| 2026-11-19 | Gemini CLI: /health, 404 and the error handler | 1 135 807 (901 366 cached) | 3 804 | | $0.3503 |
+| 2026-11-19 | Gemini CLI: Dockerfile and .dockerignore | not recorded | not recorded | | |
+| 2026-11-19 | Gemini CLI: coverage script, first test attempt stopped by the rate limit | 878 664 (455 591 cached) | 1 698 | | $0.2678 |
+| 2026-11-19 | Gemini CLI: tests for tokenService and authService | 570 795 (468 041 cached) | 3 170 | | $0.1792 |
+| 2026-11-19 | Gemini CLI: tests for bookingService and labService | 1 112 581 (997 298 cached) | 4 653 | | $0.3454 |
+| 2026-11-19 | Gemini CLI: tests for search.js (an earlier session that hung on retries was not recorded) | 1 086 418 (699 779 cached) | 1 912 | | $0.3307 |
 
 Price list: Gemini API list price for gemini-3.5-flash-lite, $0.30 per 1M input tokens and $2.50 per 1M output tokens (ai.google.dev/gemini-api/docs/pricing, checked 2026-10-15). Cached input tokens are counted at the full input price, so the real cost would be lower. The claude.ai chat does not show token counts.
 
 Not recorded: in those sessions I quit Gemini CLI without running `/stats` first, or the session ended at the rate limit. The recorded sessions show where the tokens go: nearly all of the input is the agent reading the same files again on each request, and more than 80% of it was cached; the layering fix, a three-line change, cost more input than slice 1.
+
+Exercise 4: the gemini-3-flash-preview requests Gemini CLI makes for loop detection (28 113 and 9 033 input tokens) are not priced here. The free tier stopped several sessions with its limit of 250 000 input tokens per minute; the biggest session (the Postgres switch, 100 requests) cost more than all the others together, because every request sends the whole, growing context again.
