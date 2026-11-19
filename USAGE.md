@@ -40,6 +40,8 @@ One row per agent session. In Gemini CLI, type `/stats` before you quit and copy
 | 2026-11-19 | Gemini CLI: tests for tokenService and authService | 570 795 (468 041 cached) | 3 170 | | $0.1792 |
 | 2026-11-19 | Gemini CLI: tests for bookingService and labService | 1 112 581 (997 298 cached) | 4 653 | | $0.3454 |
 | 2026-11-19 | Gemini CLI: tests for search.js (an earlier session that hung on retries was not recorded) | 1 086 418 (699 779 cached) | 1 912 | | $0.3307 |
+| 2026-11-19 | Gemini CLI: Google sign-in, plan and service (stopped by truncated answers and the rate limit) | 548 922 (414 856 cached) | 3 499 | | $0.1734 |
+| 2026-11-19 | Gemini CLI: Google sign-in, routes and login page | not recorded | not recorded | | |
 
 Price list: Gemini API list price for gemini-3.5-flash-lite, $0.30 per 1M input tokens and $2.50 per 1M output tokens (ai.google.dev/gemini-api/docs/pricing, checked 2026-10-15). Cached input tokens are counted at the full input price, so the real cost would be lower. The claude.ai chat does not show token counts.
 
