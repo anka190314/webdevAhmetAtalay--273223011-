@@ -156,3 +156,18 @@ test('AC-10 lab usage counting for a week given by its Wednesday', async () => {
     assert.strictEqual(same.get(lab2.id), 0);
   }
 });
+
+test('getLabUsage throws InvalidInput for invalid week dates', async () => {
+  await initDb();
+  const staffRes = await query('SELECT * FROM users WHERE role = $1', ['staff']);
+  const staff = staffRes.rows[0];
+
+  for (const invalidWeek of [null, 123, 'invalid-date', '2026-11', '2026-02-31']) {
+    await assert.rejects(async () => {
+      await getLabUsage(staff, invalidWeek);
+    }, (err) => {
+      assert.strictEqual(err instanceof InvalidInput, true);
+      return true;
+    });
+  }
+});
