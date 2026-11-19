@@ -119,7 +119,7 @@ test('createAccount validation, success, and duplicate email', async () => {
   );
 });
 
-test.skip('authenticateUser and getServiceUserById success and failure cases', async () => {
+test('authenticateUser and getServiceUserById success and failure cases', async () => {
   await initDb();
 
   const email = 'authcheck@example.com';
