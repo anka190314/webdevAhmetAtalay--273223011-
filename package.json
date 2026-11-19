@@ -13,7 +13,8 @@
     "mcp": "node --env-file-if-exists=.env mcp-server/server.js",
     "migrate": "node --env-file-if-exists=.env src/db/migrate.js",
     "mcp-token": "node --env-file-if-exists=.env scripts/mcp-token.js",
-    "create-user": "node --env-file-if-exists=.env scripts/create-user.js"
+    "create-user": "node --env-file-if-exists=.env scripts/create-user.js",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-include='src/services/**' --test-coverage-exclude='src/services/**/*.test.mjs' --test-coverage-lines=100 --test-coverage-functions=100 --test-coverage-branches=100 \"src/**/*.test.mjs\" \"mcp-server/*.test.mjs\" && node --test --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-exclude='src/**/*.test.mjs' --test-coverage-lines=80 \"src/**/*.test.mjs\" \"mcp-server/*.test.mjs\""
   },
   "repository": {
     "type": "git",
