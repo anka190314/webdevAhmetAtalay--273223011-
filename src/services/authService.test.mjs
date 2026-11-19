@@ -6,7 +6,7 @@ const { url, drop } = await createTestSchema();
 process.env.DATABASE_URL = url;
 
 const { initDb, pool, query } = await import('../db/database.js');
-const { findOrCreateGoogleUser, createAccount } = await import('./authService.js');
+const { findOrCreateGoogleUser, createAccount, authenticateUser, getServiceUserById } = await import('./authService.js');
 const { EmailNotVerified, InvalidInput, EmailTaken } = await import('./errors.js');
 
 after(async () => {
@@ -117,4 +117,35 @@ test('createAccount validation, success, and duplicate email', async () => {
     () => createAccount({ email: 'user1@example.com', password: 'anotherlongpassword', role: 'staff' }),
     (err) => err instanceof EmailTaken
   );
+});
+
+test('authenticateUser and getServiceUserById success and failure cases', async () => {
+  await initDb();
+
+  const email = 'authcheck@example.com';
+  const password = 'longenoughpassword123';
+  const created = await createAccount({ email, password, role: 'student' });
+  assert.ok(created);
+
+  // Successful authentication
+  const authSuccess = await authenticateUser(email, password);
+  assert.ok(authSuccess);
+  assert.strictEqual(authSuccess.email, email);
+  assert.strictEqual(authSuccess.password_hash, undefined);
+
+  // Nonexistent email returns null
+  const authNonexistent = await authenticateUser('nonexistent@example.com', password);
+  assert.strictEqual(authNonexistent, null);
+
+  // Incorrect password returns null
+  const authWrongPassword = await authenticateUser(email, 'wrongpassword123');
+  assert.strictEqual(authWrongPassword, null);
+
+  // getServiceUserById
+  const fetchedUser = await getServiceUserById(created.id);
+  assert.ok(fetchedUser);
+  assert.strictEqual(fetchedUser.id, created.id);
+
+  const fetchedNonexistent = await getServiceUserById(999999);
+  assert.strictEqual(fetchedNonexistent, null);
 });

@@ -6,7 +6,7 @@ const { url, drop } = await createTestSchema();
 process.env.DATABASE_URL = url;
 
 const { initDb, pool, query } = await import('../db/database.js');
-const { generateToken, resolveToken } = await import('./tokenService.js');
+const { generateToken, resolveToken, createTokenForEmail } = await import('./tokenService.js');
 
 after(async () => {
   await pool.end();
@@ -16,7 +16,7 @@ after(async () => {
 test('token service tests', async (t) => {
   await initDb();
 
-  const userRes = await query('SELECT id FROM users WHERE role = $1', ['student']);
+  const userRes = await query('SELECT id, email FROM users WHERE role = $1', ['student']);
   const user = userRes.rows[0];
 
   await t.test('a created token resolves to its user', async () => {
@@ -52,5 +52,17 @@ test('token service tests', async (t) => {
         }
       }
     }
+  });
+
+  await t.test('createTokenForEmail creates token for existing email and returns null for non-existing email', async () => {
+    const token = await createTokenForEmail(user.email);
+    assert.strictEqual(typeof token, 'string');
+    assert.ok(token.length > 0);
+    const resolved = await resolveToken(token);
+    assert.ok(resolved);
+    assert.strictEqual(resolved.id, user.id);
+
+    const nullToken = await createTokenForEmail('nonexistent@example.com');
+    assert.strictEqual(nullToken, null);
   });
 });
