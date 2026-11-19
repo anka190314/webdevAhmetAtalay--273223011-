@@ -10,6 +10,7 @@ for (const name of REQUIRED) {
   }
 }
 
+
 const PORT = process.env.PORT || 3000;
 
 await initDb();

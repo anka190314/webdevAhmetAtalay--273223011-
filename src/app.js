@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import authRouter from './routes/auth.js';
 import labsRouter from './routes/labs.js';
 import staffRouter from './routes/staff.js';
+import healthRouter from './routes/health.js';
 
 let sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -35,6 +36,7 @@ app.use(session({
 app.use(authRouter);
 app.use(labsRouter);
 app.use(staffRouter);
+app.use(healthRouter);
 
 // Root redirect
 app.get('/', (req, res) => {
@@ -42,6 +44,20 @@ app.get('/', (req, res) => {
     return res.redirect('/labs');
   }
   res.redirect('/login');
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Error handler (four arguments)
+app.use((err, req, res, next) => {
+  console.error(err);
+  if ((err instanceof SyntaxError && err.status === 400) || err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'The request body is not valid JSON.' });
+  }
+  res.status(500).json({ error: 'Something went wrong. Please try again.' });
 });
 
 export default app;

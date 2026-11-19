@@ -468,6 +468,37 @@ test('Server API and Page tests', async (t) => {
     assert.strictEqual(slot2.calendarUrl, undefined);
   });
 
+  await t.test('GET /health answers 200 with status ok and db ok', async () => {
+    const res = await fetch(`http://localhost:${port}/health`);
+    assert.strictEqual(res.status, 200);
+    const data = await res.json();
+    assert.deepStrictEqual(data, { status: 'ok', db: 'ok' });
+  });
+
+  await t.test('An unknown path gives 404 JSON', async () => {
+    const res = await fetch(`http://localhost:${port}/nonexistent-path-abc`);
+    assert.strictEqual(res.status, 404);
+    const data = await res.json();
+    assert.deepStrictEqual(data, { error: 'Not found' });
+  });
+
+  await t.test('Broken JSON to POST /api/bookings gives 400 with error message and no stack line', async () => {
+    const cookie = await getCookie();
+    const res = await fetch(`http://localhost:${port}/api/bookings`, {
+      method: 'POST',
+      headers: {
+        Cookie: cookie,
+        'Content-Type': 'application/json'
+      },
+      body: 'invalid-json-content'
+    });
+    assert.strictEqual(res.status, 400);
+    const text = await res.text();
+    const data = JSON.parse(text);
+    assert.strictEqual(data.error, 'The request body is not valid JSON.');
+    assert.strictEqual(text.includes('at '), false);
+  });
+
   await t.test('AC-14 after signing in with a seeded account, /api/labs lists every seeded lab with its name and number of workstations', async () => {
     const cookie = await getCookie();
     const res = await fetch(`http://localhost:${port}/api/labs`, { headers: { Cookie: cookie } });

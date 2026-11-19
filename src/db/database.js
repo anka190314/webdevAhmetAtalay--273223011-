@@ -4,11 +4,16 @@ import bcrypt from 'bcrypt';
 import { runMigrations } from './migrate.js';
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis: 2000
 });
 
 export async function query(text, params) {
   return pool.query(text, params);
+}
+
+export async function ping() {
+  await query('SELECT 1');
 }
 
 export async function initDb() {
