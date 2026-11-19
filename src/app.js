@@ -53,7 +53,7 @@ app.use((req, res) => {
 
 // Error handler (four arguments)
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error(err.stack);
   if ((err instanceof SyntaxError && err.status === 400) || err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'The request body is not valid JSON.' });
   }
