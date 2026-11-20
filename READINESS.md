@@ -92,6 +92,7 @@ How I checked: Safari Web Inspector, Network tab, "Disable caches", reload (`doc
 5. **Linking a Google account by e-mail does not check that the user has signed in locally once** (Lecture 7). With Google, which verifies addresses, the risk is small; with a less careful provider it would allow an account takeover.
 6. **The free plan:** the first request after about 15 minutes of inactivity waits around 50 seconds, and Neon scales to zero.
 7. Cosmetic: the booking screen's heading shows the lab's id ("Lab 1 Booking") instead of its name, and workstation names are not trimmed.
+8. **UI checklist items not met or not checked** (`docs/UI.md`): no design tokens, the page grows when the slots arrive, the suggestion from the model is not labelled as one, no dark mode; the keyboard-only flow, the focus ring, 768 px and 44 px touch targets were not checked.
 
 ## 8. Model feature
 
