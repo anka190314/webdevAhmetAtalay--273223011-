@@ -55,3 +55,13 @@ test('lab.html: a readable error with Retry, a reserved status line, and the sug
   assert.match(html, /#loading \{ min-height/);
   assert.ok(!html.includes('err.message ||'), 'the browser message is never the fallback');
 });
+
+test('lab.html: after a failed load the old grid is removed, so no Book button points at another date', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'lab.html'), 'utf8');
+  assert.match(html, /innerHTML = '';\s*if \(isBrowserError\(err\)\)/);
+});
+
+test('lab.html: after a failed load the old grid is removed, so no Book button points at another date', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'lab.html'), 'utf8');
+  assert.match(html, /innerHTML = '';\s*if \(isBrowserError\(err\)\)/);
+});

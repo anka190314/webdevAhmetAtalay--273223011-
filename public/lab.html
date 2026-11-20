@@ -269,6 +269,8 @@
         showSuggestion(date);
       } catch (err) {
         finishLoading();
+        workstationsContainer.innerHTML = '';
+        workstationsContainer.innerHTML = '';
         if (isBrowserError(err)) {
           showLoadFailure();
         } else {
