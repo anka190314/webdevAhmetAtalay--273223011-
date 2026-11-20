@@ -90,6 +90,20 @@ One request followed end to end: a student presses "Book" on a free slot.
 **One place that did not match the layering**
 `GET /labs/:id` in `src/routes/labs.js` imported `getLabById` from `src/db/bookings.js` and checked the lab itself, skipping the service. Fixed in commit 634ff3c: the route now calls `getLab()` in `src/services/bookingService.js`, which throws `LabNotFound`.
 
+### How each screen is rendered
+
+Every page is a static HTML file in `public/`, sent by Express with `sendFile` only after the server has decided whether this visitor may see it. The data is fetched as JSON from `/api/...` by the page's own script and written into the page with `textContent` (client-side rendering). There is no server-side template.
+
+| Screen | Path | Who may open it (decided on the server, before any HTML is sent) | Rendered | Data it loads |
+|---|---|---|---|---|
+| Sign in | `/login` | anyone | static HTML, no data | none; the form posts to `/api/login`, the Google button goes to `/api/auth/google` |
+| Labs list | `/labs` | signed in, otherwise 302 to `/login` | in the browser | `GET /api/labs` |
+| Booking screen | `/labs/:id` | signed in, otherwise 302 to `/login`; an unknown lab gives 404 | in the browser, redrawn after every date change and booking | `GET /api/labs/:id/slots?date=`, `POST /api/bookings`, `DELETE /api/bookings/:id`, `POST /api/search` |
+| Staff page | `/staff` | staff only: 302 without a session, 403 for a student | in the browser | `GET /api/labs`, `GET /api/usage?week=`, `POST /api/labs/:id/workstations` |
+| My bookings | `/bookings` | - | not built; see the known gaps in READINESS.md | - |
+
+Why this way: the pages are small and the same for everyone, so they need no server templates; what changes (the slots, the usage numbers) changes after every click, so the browser asks the API again instead of loading a new page. The price is a waterfall: the data arrives one round trip after the page (measured on the live booking screen: about 80 ms for the page, then about 75 ms for the slots).
+
 ## Acceptance criteria
 <!-- Every criterion carries an id. A test proves it by naming that id in its title, for example
      test('AC-3 a booking that overlaps another is refused with 409', ...).
