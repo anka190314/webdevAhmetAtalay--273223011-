@@ -1,0 +1,57 @@
+:root {
+  --color-bg: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-text: #222222;
+  --color-muted: #666666;
+  --color-muted-dark: #555555;
+  --color-primary: #0275d8;
+  --color-primary-hover: #025aa5;
+  --color-primary-login: #0056b3;
+  --color-primary-login-hover: #004085;
+  --color-danger: #c9302c;
+  --color-danger-hover: #a52a26;
+  --color-secondary: #6c757d;
+  --color-secondary-hover: #5a6268;
+  --color-google: #db4437;
+  --color-google-hover: #c23321;
+  --color-error-bg: #f8d7da;
+  --color-error-text: #721c24;
+  --color-success-bg: #d4edda;
+  --color-success-text: #155724;
+  --color-highlight-bg: #e2f0cb;
+  --color-highlight-border: #88b04b;
+  --color-focus: #0275d8;
+  --color-border: #cccccc;
+  --color-border-light: #dddddd;
+  --color-border-lighter: #eeeeee;
+  --color-border-card: #e0e0e0;
+  --color-hover-bg: #f0f0f0;
+  --color-alt-bg: #fafafa;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+  --text-3xl: 24px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+button, input, select, li a {
+  min-height: 44px;
+  box-sizing: border-box;
+}

@@ -4,19 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Labs - TU Sofia Lab Booking</title>
+  <link rel="stylesheet" href="/assets/app.css">
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
-    h1 { font-size: 22px; margin: 0; }
-    .logout-btn { background: #c9302c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-    .logout-btn:hover { background: #a52a26; }
+    body { font-family: sans-serif; margin: 0; padding: var(--space-5); background: var(--color-bg); }
+    .container { max-width: 600px; margin: 0 auto; background: var(--color-surface); padding: var(--space-6); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); border-bottom: 1px solid var(--color-border-lighter); padding-bottom: var(--space-3); }
+    h1 { font-size: var(--text-2xl); margin: 0; }
+    .logout-btn { background: var(--color-danger); color: var(--color-surface); border: none; padding: var(--space-2) var(--space-3); border-radius: 4px; cursor: pointer; }
+    .logout-btn:hover { background: var(--color-danger-hover); }
     ul { list-style: none; padding: 0; margin: 0; }
-    li { border: 1px solid #eee; margin-bottom: 8px; border-radius: 4px; background: #fafafa; overflow: hidden; }
-    li a { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; text-decoration: none; color: inherit; }
-    li a:hover { background: #f0f0f0; }
-    .lab-name { font-weight: bold; font-size: 16px; }
-    .ws-count { color: #666; font-size: 14px; }
+    li { border: 1px solid var(--color-border-lighter); margin-bottom: var(--space-2); border-radius: 4px; background: var(--color-alt-bg); overflow: hidden; }
+    li a { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) var(--space-4); text-decoration: none; color: inherit; min-height: 44px; box-sizing: border-box; }
+    li a:hover { background: var(--color-hover-bg); }
+    .lab-name { font-weight: bold; font-size: var(--text-lg); }
+    .ws-count { color: var(--color-muted); font-size: var(--text-base); }
+    #loading, #empty { text-align: center; color: var(--color-muted); }
   </style>
 </head>
 <body>
@@ -27,8 +29,8 @@
         <button type="submit" class="logout-btn">Sign Out</button>
       </form>
     </header>
-    <div id="loading" style="text-align: center; color: #666;">Loading labs...</div>
-    <div id="empty" style="display: none; text-align: center; color: #666;">No labs available.</div>
+    <div id="loading" style="text-align: center; color: var(--color-muted);">Loading labs...</div>
+    <div id="empty" style="display: none; text-align: center; color: var(--color-muted);">No labs available.</div>
     <ul id="labs-list"></ul>
   </div>
   <script>

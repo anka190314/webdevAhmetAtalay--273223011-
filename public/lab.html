@@ -4,32 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab Booking - TU Sofia Lab Booking</title>
+  <link rel="stylesheet" href="/assets/app.css">
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-    .container { max-width: 800px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px; flex-wrap: wrap; gap: 10px; }
-    h1 { font-size: 22px; margin: 0; }
-    .nav-links { display: flex; gap: 10px; align-items: center; }
-    .btn { background: #0275d8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 14px; }
-    .btn:hover { background: #025aa5; }
-    .btn-danger { background: #c9302c; }
-    .btn-danger:hover { background: #a52a26; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #5a6268; }
-    .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    label { font-weight: bold; font-size: 14px; }
-    input[type="date"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-    #error-banner { background: #f8d7da; color: #721c24; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; display: none; }
-    .workstation-card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-bottom: 16px; background: #fafafa; }
-    .ws-name { font-weight: bold; font-size: 18px; margin-bottom: 12px; }
-    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-    .slot-box { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
-    .slot-time { font-size: 13px; color: #555; font-weight: 500; }
-    .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold; display: inline-block; }
-    .status-other { background: #f8d7da; color: #721c24; }
-    #loading, #empty { text-align: center; color: #666; padding: 40px 0; font-size: 16px; }
-    #empty a { color: #0275d8; text-decoration: underline; }
-    .slot-highlight { background: #e2f0cb !important; border-color: #88b04b !important; box-shadow: 0 0 5px rgba(136, 176, 75, 0.5); }
+    body { font-family: sans-serif; margin: 0; padding: var(--space-5); background: var(--color-bg); }
+    .container { max-width: 800px; margin: 0 auto; background: var(--color-surface); padding: var(--space-6); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); border-bottom: 1px solid var(--color-border-lighter); padding-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-3); }
+    h1 { font-size: var(--text-2xl); margin: 0; }
+    .nav-links { display: flex; gap: var(--space-3); align-items: center; }
+    .btn { background: var(--color-primary); color: var(--color-surface); border: none; padding: var(--space-2) var(--space-3); border-radius: 4px; cursor: pointer; text-decoration: none; font-size: var(--text-base); }
+    .btn:hover { background: var(--color-primary-hover); }
+    .btn-danger { background: var(--color-danger); }
+    .btn-danger:hover { background: var(--color-danger-hover); }
+    .btn-secondary { background: var(--color-secondary); }
+    .btn-secondary:hover { background: var(--color-secondary-hover); }
+    .controls { margin-bottom: var(--space-5); display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+    label { font-weight: bold; font-size: var(--text-base); }
+    input[type="date"] { padding: var(--space-2); border: 1px solid var(--color-border); border-radius: 4px; font-size: var(--text-base); }
+    #error-banner { background: var(--color-error-bg); color: var(--color-error-text); padding: var(--space-3) var(--space-4); border-radius: 4px; margin-bottom: var(--space-4); display: none; }
+    .workstation-card { border: 1px solid var(--color-border-card); border-radius: 6px; padding: var(--space-4); margin-bottom: var(--space-4); background: var(--color-alt-bg); }
+    .ws-name { font-weight: bold; font-size: var(--text-xl); margin-bottom: var(--space-3); }
+    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--space-3); }
+    .slot-box { background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: 4px; padding: var(--space-3); text-align: center; display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-2); }
+    .slot-time { font-size: var(--text-sm); color: var(--color-muted-dark); font-weight: 500; }
+    .status-badge { font-size: var(--text-xs); padding: var(--space-1) var(--space-2); border-radius: 4px; font-weight: bold; display: inline-block; }
+    .status-other { background: var(--color-error-bg); color: var(--color-error-text); }
+    #loading, #empty { text-align: center; color: var(--color-muted); padding: var(--space-8) 0; font-size: var(--text-lg); }
+    #empty a { color: var(--color-primary); text-decoration: underline; }
+    .slot-highlight { background: var(--color-highlight-bg) !important; border-color: var(--color-highlight-border) !important; box-shadow: 0 0 5px rgba(136, 176, 75, 0.5); }
   </style>
 </head>
 <body>
@@ -44,14 +45,14 @@
       </div>
     </header>
 
-    <div class="controls" style="display: flex; flex-direction: column; gap: 10px;">
-      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <div class="controls" style="display: flex; flex-direction: column; gap: var(--space-3);">
+      <div style="display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;">
         <label for="search-input">Search:</label>
-        <input type="text" id="search-input" placeholder="e.g. tomorrow at 10 in lab 2140" style="flex: 1; min-width: 200px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+        <input type="text" id="search-input" placeholder="e.g. tomorrow at 10 in lab 2140" style="flex: 1; min-width: 200px; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: 4px; font-size: var(--text-base);">
         <button type="button" id="search-btn" class="btn">Search</button>
       </div>
-      <div id="search-message" style="display: none; color: #555; font-size: 14px;"></div>
-      <div style="display: flex; gap: 10px; align-items: center;">
+      <div id="search-message" style="display: none; color: var(--color-muted-dark); font-size: var(--text-base);"></div>
+      <div style="display: flex; gap: var(--space-3); align-items: center;">
         <label for="date-picker">Select Date:</label>
         <input type="date" id="date-picker">
       </div>

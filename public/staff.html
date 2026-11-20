@@ -4,29 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Staff - TU Sofia Lab Booking</title>
+  <link rel="stylesheet" href="/assets/app.css">
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-    .container { max-width: 800px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px; flex-wrap: wrap; gap: 10px; }
-    h1 { font-size: 22px; margin: 0; }
-    h2 { font-size: 18px; margin-top: 0; margin-bottom: 12px; }
-    .nav-links { display: flex; gap: 10px; align-items: center; }
-    .btn { background: #0275d8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 14px; }
-    .btn:hover { background: #025aa5; }
-    .btn-danger { background: #c9302c; }
-    .btn-danger:hover { background: #a52a26; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #5a6268; }
-    .section { margin-bottom: 24px; padding: 16px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa; }
-    .form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
-    label { font-weight: bold; font-size: 14px; }
-    input[type="text"], select, input[type="date"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-    #error-banner { background: #f8d7da; color: #721c24; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; display: none; }
-    #success-banner { background: #d4edda; color: #155724; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; display: none; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-    th { background: #f0f0f0; font-weight: bold; }
-    #loading, #empty { text-align: center; color: #666; padding: 20px 0; font-size: 14px; }
+    body { font-family: sans-serif; margin: 0; padding: var(--space-5); background: var(--color-bg); }
+    .container { max-width: 800px; margin: 0 auto; background: var(--color-surface); padding: var(--space-6); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); border-bottom: 1px solid var(--color-border-lighter); padding-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-3); }
+    h1 { font-size: var(--text-2xl); margin: 0; }
+    h2 { font-size: var(--text-xl); margin-top: 0; margin-bottom: var(--space-3); }
+    .nav-links { display: flex; gap: var(--space-3); align-items: center; }
+    .btn { background: var(--color-primary); color: var(--color-surface); border: none; padding: var(--space-2) var(--space-3); border-radius: 4px; cursor: pointer; text-decoration: none; font-size: var(--text-base); }
+    .btn:hover { background: var(--color-primary-hover); }
+    .btn-danger { background: var(--color-danger); }
+    .btn-danger:hover { background: var(--color-danger-hover); }
+    .btn-secondary { background: var(--color-secondary); }
+    .btn-secondary:hover { background: var(--color-secondary-hover); }
+    .section { margin-bottom: var(--space-6); padding: var(--space-4); border: 1px solid var(--color-border-card); border-radius: 6px; background: var(--color-alt-bg); }
+    .form-group { margin-bottom: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
+    label { font-weight: bold; font-size: var(--text-base); }
+    input[type="text"], select, input[type="date"] { padding: var(--space-2); border: 1px solid var(--color-border); border-radius: 4px; font-size: var(--text-base); }
+    #error-banner { background: var(--color-error-bg); color: var(--color-error-text); padding: var(--space-3) var(--space-4); border-radius: 4px; margin-bottom: var(--space-4); display: none; }
+    #success-banner { background: var(--color-success-bg); color: var(--color-success-text); padding: var(--space-3) var(--space-4); border-radius: 4px; margin-bottom: var(--space-4); display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: var(--space-3); background: var(--color-surface); }
+    th, td { border: 1px solid var(--color-border-light); padding: var(--space-3); text-align: left; font-size: var(--text-base); }
+    th { background: var(--color-hover-bg); font-weight: bold; }
+    #loading, #empty { text-align: center; color: var(--color-muted); padding: var(--space-5) 0; font-size: var(--text-base); }
   </style>
 </head>
 <body>

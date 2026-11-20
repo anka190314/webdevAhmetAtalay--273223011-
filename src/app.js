@@ -1,10 +1,16 @@
 import express from 'express';
 import session from 'express-session';
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRouter from './routes/auth.js';
 import labsRouter from './routes/labs.js';
 import staffRouter from './routes/staff.js';
 import healthRouter from './routes/health.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicDir = path.join(__dirname, '../public');
 
 let sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -49,6 +55,8 @@ app.get('/', (req, res) => {
   }
   res.redirect('/login');
 });
+
+app.use('/assets', express.static(path.join(publicDir, 'assets')));
 
 // 404 handler
 app.use((req, res) => {

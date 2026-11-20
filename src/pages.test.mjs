@@ -17,3 +17,25 @@ test('AC-12 every page fits a 375-pixel-wide phone screen: it sets the viewport 
     }
   }
 });
+
+test('every page links /assets/app.css', () => {
+  for (const page of pages) {
+    const html = fs.readFileSync(path.join(publicDir, page), 'utf8');
+    assert.match(html, /<link rel="stylesheet" href="\/assets\/app\.css">/, `${page} links /assets/app.css`);
+  }
+});
+
+test('no hex colour in public/*.html', () => {
+  for (const page of pages) {
+    const html = fs.readFileSync(path.join(publicDir, page), 'utf8');
+    const hexMatches = html.match(/#[0-9a-fA-F]{3,6}/g);
+    assert.strictEqual(hexMatches, null, `${page} contains hex colours: ${hexMatches}`);
+  }
+});
+
+test('app.css has :focus-visible rule with outline and min-height: 44px', () => {
+  const cssPath = path.join(publicDir, 'assets', 'app.css');
+  const css = fs.readFileSync(cssPath, 'utf8');
+  assert.match(css, /:focus-visible\s*\{[^}]*outline\s*:/);
+  assert.match(css, /min-height\s*:\s*44px/);
+});

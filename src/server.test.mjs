@@ -596,5 +596,16 @@ test('Server API and Page tests', async (t) => {
     assert.ok(!labs.some((l) => l.id === lab.id));
   });
 
+  await t.test('GET /assets/app.css answers 200 with text/css content type', async () => {
+    const res = await fetch(`http://localhost:${port}/assets/app.css`);
+    assert.strictEqual(res.status, 200);
+    assert.match(res.headers.get('content-type'), /text\/css/);
+  });
+
+  await t.test('GET /lab.html answers 404', async () => {
+    const res = await fetch(`http://localhost:${port}/lab.html`);
+    assert.strictEqual(res.status, 404);
+  });
+
   await new Promise((resolve) => server.close(resolve));
 });
