@@ -195,3 +195,15 @@ Changed in review: the first plan added labs (POST /api/labs), which no criterio
 - Went wrong: the API cut its answers off ("Incomplete JSON segment at the end") again and again and the free-tier limit stopped the sessions, so a second, smaller session finished the routes and I wrote the server test myself. verifyIdToken first accepted a token without exp. The coverage gate failed once on two untested branches (a token that is not a JWT, a payload that is not JSON). The callback swallowed every error without a trace; it now logs the message. On the live site /api/auth/google first answered 503 "Google Sign-In is not configured.", because I had not added the Google variables to Render.
 - Changed by hand: the server test for the whole flow (it checks that the SHA-256 of the verifier sent to the token endpoint equals the code_challenge sent to Google), the two JWT tests, the error log in the callback.
 - Proof: curl on the live URL answers 302 to accounts.google.com with client_id, the registered redirect_uri, a 64-character state, a 43-character code_challenge and S256; a Google sign-in created one student row with google_id set; the live session cookie is HttpOnly and Secure.
+
+
+## 2026-11-20 · Exercise 4: persistence and break-it tests
+- Goal: show that data survives a redeploy and see what the live app does when things go wrong.
+- Autonomy: by hand, no agent.
+- Persistence: a booking made before a manual deploy was still there after it; every restart signed everybody out, because sessions live in memory (MemoryStore).
+- Database down (local Postgres stopped under the running app): the first try crashed the whole process with an unhandled 'error' event from the pg pool (57P01). After an error listener on the pool and a test for it, /health answered 200, then 503 {"status":"error","db":"down"}, then 200 again without a restart.
+- Bad release and rollback: a broken /labs heading passed CI (94 tests) and went live. Render's Rollback brought the previous build back in about 26 seconds; a git revert took 2 to 3 minutes (CI and build). Render switches Auto-Deploy off on a rollback, so it had to be checked. I first reverted instead of rolling back and ran git revert twice, so the history has a few extra bad and revert commits; the heading was finally restored with an explicit edit.
+- Garbage and access: broken JSON gives 400 with one sentence; a write without a session gives 401; a second account deleting another user's booking gives 403, and the row stays.
+- Four states of the booking screen (Safari: a 5-second fetch delay from the console for loading, Wi-Fi off for the error): "Loading slots..."; on a weekend an empty state with a way out; on an error only the browser's own "Load failed"; and the slots.
+- Waterfall with caches disabled: two requests, the page (about 80 ms) and then the slots (about 75 ms), one after the other because the page's own script asks for the slots; 3.7 KB transferred. A booking adds a POST and a full reload of the slots.
+- Found on the way: a slot earlier today can still be booked (08:00 booked at 22:16).
