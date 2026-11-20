@@ -39,3 +39,19 @@ test('app.css has :focus-visible rule with outline and min-height: 44px', () => 
   assert.match(css, /:focus-visible\s*\{[^}]*outline\s*:/);
   assert.match(css, /min-height\s*:\s*44px/);
 });
+
+test('lab.html: a readable error with Retry, a reserved status line, and the suggestion labelled as one', () => {
+  const html = fs.readFileSync(path.join(publicDir, 'lab.html'), 'utf8');
+  for (const sentence of [
+    'Could not load the slots. Check your connection and try again.',
+    'Could not reach the server. Check your connection and try again.',
+    'Search is not available right now. Please choose the day and time yourself.',
+    'Nothing is booked until you press Book.',
+  ]) {
+    assert.ok(html.includes(sentence), sentence);
+  }
+  assert.ok(html.includes("retryBtn.textContent = 'Retry'"), 'a Retry button');
+  assert.match(html, /id="loading" role="status"/);
+  assert.match(html, /#loading \{ min-height/);
+  assert.ok(!html.includes('err.message ||'), 'the browser message is never the fallback');
+});

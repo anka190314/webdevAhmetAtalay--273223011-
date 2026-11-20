@@ -28,7 +28,8 @@
     .slot-time { font-size: var(--text-sm); color: var(--color-muted-dark); font-weight: 500; }
     .status-badge { font-size: var(--text-xs); padding: var(--space-1) var(--space-2); border-radius: 4px; font-weight: bold; display: inline-block; }
     .status-other { background: var(--color-error-bg); color: var(--color-error-text); }
-    #loading, #empty { text-align: center; color: var(--color-muted); padding: var(--space-8) 0; font-size: var(--text-lg); }
+    #loading { min-height: 24px; margin-bottom: var(--space-2); color: var(--color-muted); font-size: var(--text-base); }
+    #empty { text-align: center; color: var(--color-muted); padding: var(--space-8) 0; font-size: var(--text-lg); }
     #empty a { color: var(--color-primary); text-decoration: underline; }
     .slot-highlight { background: var(--color-highlight-bg) !important; border-color: var(--color-highlight-border) !important; box-shadow: 0 0 5px rgba(136, 176, 75, 0.5); }
   </style>
@@ -51,7 +52,7 @@
         <input type="text" id="search-input" placeholder="e.g. tomorrow at 10 in lab 2140" style="flex: 1; min-width: 200px; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: 4px; font-size: var(--text-base);">
         <button type="button" id="search-btn" class="btn">Search</button>
       </div>
-      <div id="search-message" style="display: none; color: var(--color-muted-dark); font-size: var(--text-base);"></div>
+      <div id="search-message" role="status" aria-live="polite" style="display: none; color: var(--color-muted-dark); font-size: var(--text-base);"></div>
       <div style="display: flex; gap: var(--space-3); align-items: center;">
         <label for="date-picker">Select Date:</label>
         <input type="date" id="date-picker">
@@ -59,7 +60,7 @@
     </div>
 
     <div id="error-banner"></div>
-    <div id="loading" style="display: none;">Loading slots...</div>
+    <div id="loading" role="status" aria-live="polite"></div>
     <div id="empty" style="display: none;"></div>
     <div id="workstations-container"></div>
   </div>
@@ -128,6 +129,48 @@
       emptyEl.style.display = 'block';
     }
 
+    function isBrowserError(err) {
+      return err instanceof TypeError || err instanceof SyntaxError;
+    }
+
+    function startLoading() {
+      loadingEl.textContent = 'Loading slots...';
+      workstationsContainer.style.opacity = '0.5';
+      workstationsContainer.setAttribute('aria-busy', 'true');
+    }
+
+    function finishLoading() {
+      loadingEl.textContent = '';
+      workstationsContainer.style.opacity = '';
+      workstationsContainer.removeAttribute('aria-busy');
+    }
+
+    function showLoadFailure() {
+      showError('Could not load the slots. Check your connection and try again.');
+      const retryBtn = document.createElement('button');
+      retryBtn.type = 'button';
+      retryBtn.className = 'btn';
+      retryBtn.textContent = 'Retry';
+      retryBtn.style.marginLeft = 'var(--space-3)';
+      retryBtn.addEventListener('click', loadSlots);
+      errorBanner.appendChild(retryBtn);
+    }
+
+    const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    function showSuggestion(date) {
+      const suggestedDate = new URLSearchParams(window.location.search).get('date');
+      const range = slotParam === null ? undefined : slotTimes[Number(slotParam)];
+      if (date !== suggestedDate || range === undefined) {
+        searchMessage.style.display = 'none';
+        return;
+      }
+      const [year, month, day] = date.split('-');
+      const weekday = weekdayNames[new Date(date + 'T00:00:00Z').getUTCDay()];
+      searchMessage.textContent = 'Suggested by the search: ' + weekday + ' ' + day + '.' + month + '.' + year + ', ' + range.replace(/\s+/g, '') + '. Nothing is booked until you press Book.';
+      searchMessage.style.display = 'block';
+    }
+
     async function loadSlots() {
       clearError();
       const date = datePicker.value;
@@ -145,9 +188,8 @@
         return;
       }
 
-      loadingEl.style.display = 'block';
+      startLoading();
       emptyEl.style.display = 'none';
-      workstationsContainer.innerHTML = '';
 
       try {
         const res = await fetch(`/api/labs/${labId}/slots?date=${date}`);
@@ -156,13 +198,15 @@
           throw new Error(errData.error || 'Failed to load slots');
         }
         const workstations = await res.json();
-        loadingEl.style.display = 'none';
+        finishLoading();
 
         if (workstations.length === 0) {
+          workstationsContainer.innerHTML = '';
           showEmpty('This lab has no workstations yet.', true);
           return;
         }
 
+        workstationsContainer.innerHTML = '';
         labTitle.textContent = `Lab ${labId} Booking`;
 
         workstations.forEach(ws => {
@@ -222,9 +266,14 @@
           card.appendChild(grid);
           workstationsContainer.appendChild(card);
         });
+        showSuggestion(date);
       } catch (err) {
-        loadingEl.style.display = 'none';
-        showError(err.message || 'An error occurred while loading slots.');
+        finishLoading();
+        if (isBrowserError(err)) {
+          showLoadFailure();
+        } else {
+          showError(err.message);
+        }
       }
     }
 
@@ -242,7 +291,7 @@
         }
         loadSlots();
       } catch (err) {
-        showError(err.message);
+        showError(isBrowserError(err) ? 'Could not reach the server. Check your connection and try again.' : err.message);
       }
     }
 
@@ -258,7 +307,7 @@
         }
         loadSlots();
       } catch (err) {
-        showError(err.message);
+        showError(isBrowserError(err) ? 'Could not reach the server. Check your connection and try again.' : err.message);
       }
     }
 
@@ -304,7 +353,7 @@
         }
       } catch (err) {
         searchBtn.disabled = false;
-        searchMessage.textContent = err.message || 'An error occurred during search';
+        searchMessage.textContent = isBrowserError(err) ? 'Search is not available right now. Please choose the day and time yourself.' : err.message;
         searchMessage.style.display = 'block';
       }
     }
