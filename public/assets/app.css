@@ -55,3 +55,11 @@ button, input, select, li a {
   min-height: 44px;
   box-sizing: border-box;
 }
+
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  box-sizing: border-box;
+}

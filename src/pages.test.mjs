@@ -60,3 +60,8 @@ test('lab.html: after a failed load the old grid is removed, so no Book button p
   const html = fs.readFileSync(path.join(publicDir, 'lab.html'), 'utf8');
   assert.match(html, /innerHTML = '';\s*if \(isBrowserError\(err\)\)/);
 });
+
+test('app.css: links that look like buttons are at least 44px tall too', () => {
+  const css = fs.readFileSync(path.join(publicDir, 'assets', 'app.css'), 'utf8');
+  assert.match(css, /a\.btn \{[^}]*min-height: 44px/);
+});
