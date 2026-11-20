@@ -99,6 +99,7 @@ How I checked: Safari Web Inspector, Network tab, "Disable caches", reload (`doc
 The booking screen has a search box: a sentence such as "Monday at 10 in lab 2140" picks the date and the slot. It never books anything.
 
 - The provider is Gemini (`MODEL_NAME`, default `gemini-3.5-flash-lite`), called only from `src/services/search.js`. The model gets the sentence, today's date and the lab names; no personal data.
+- What leaves the app: only the sentence the user typed, today's date and the lab names are sent to Google's Gemini API. No name, e-mail address, booking, session or password is sent, and the request carries no user id.
 - Every call has a 5-second timeout. Without a key, on a timeout, a 429 or an answer that is not the expected JSON, the user gets "Could not understand the request, please choose the day and time yourself", and the pickers still work.
 - The model's answer is checked against real data before it is used: the lab must exist, the date must be a weekday that is not in the past, and the slot must be between 0 and 5 (AC-21).
 - Tests: AC-16, AC-17, AC-21 and AC-22, and the calls to Gemini with `fetch` faked; `search.js` has 100% line, branch and function coverage, and no test calls the real API.
