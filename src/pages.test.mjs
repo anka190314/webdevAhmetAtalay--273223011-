@@ -60,8 +60,3 @@ test('lab.html: after a failed load the old grid is removed, so no Book button p
   const html = fs.readFileSync(path.join(publicDir, 'lab.html'), 'utf8');
   assert.match(html, /innerHTML = '';\s*if \(isBrowserError\(err\)\)/);
 });
-
-test('lab.html: after a failed load the old grid is removed, so no Book button points at another date', () => {
-  const html = fs.readFileSync(path.join(publicDir, 'lab.html'), 'utf8');
-  assert.match(html, /innerHTML = '';\s*if \(isBrowserError\(err\)\)/);
-});
