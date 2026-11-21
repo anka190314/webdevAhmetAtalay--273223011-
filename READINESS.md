@@ -50,12 +50,12 @@ Screen: the booking screen, `/labs/:id`, on the live site, in Safari.
 
 | State | What the user sees | How I produced it | Screenshot |
 |---|---|---|---|
-| Loading | "Loading slots..." | Safari offered no throttling here, so the console delayed every `fetch` by 5 seconds | `docs/ui/lab-loading.png` |
-| Empty | "Weekends are not bookable. Please select a weekday (Monday to Friday)." with a "Choose another lab" link | picked Saturday 28.11.2026 | `docs/ui/lab-empty.png` |
-| Error | a red box with only "Load failed" | Wi-Fi off, then a new date | `docs/ui/lab-error.png` |
+| Loading | "Loading slots..." in a status line above the old grid, which stays dimmed | the console delayed every `fetch` by 15 seconds, then a new date | `docs/ui/lab-loading.png` |
+| Empty | "Weekends are not bookable. Please select a weekday (Monday to Friday)." with a "Choose another lab" link | picked Saturday 21.11.2026 | `docs/ui/lab-empty.png` |
+| Error | "Could not load the slots. Check your connection and try again." with a Retry button; the old grid is removed | Wi-Fi off, then a new date | `docs/ui/lab-error.png` |
 | Success | six slots for every workstation; my own booking with Cancel and "Add to Google Calendar", other people's as "Booked" | a weekday | `docs/ui/lab-success.png` |
 
-The error state is the weak one: it shows the browser's own message, says nothing about what happened and offers no retry (gap 3 in section 7).
+On 2026-11-20 the error state showed only the browser's own "Load failed"; it now has a sentence and Retry. While fixing it I first left the old grid on the screen under the error, so a Book button could book the previous date; my own screenshot showed it and the grid is now removed. What is still weak: after the server forgets a session, the page shows the server's one word "Unauthorized" (gap 1 in section 7).
 
 ## 5. Request waterfall
 
@@ -63,14 +63,16 @@ Booking screen on the live URL, caches disabled in Safari's Network tab, 2026-11
 
 | # | Request | Type | Time |
 |---|---|---|---|
-| 1 | `/labs/1` | document | about 80 ms |
-| 2 | `/api/labs/1/slots?date=...` | fetch | about 75 ms, starts after 1 |
+| 1 | `/labs/1` | document | about 76 ms |
+| 2 | `/assets/app.css` | stylesheet | about 71 ms, starts after 1 |
+| 3 | `/api/labs/1/slots?date=...` | fetch | about 77 ms, starts after 2 |
 
-Two requests, 3.7 KB transferred, about 95 ms in all. They run one after the other because the page's own script asks for the slots; there is no external CSS or JavaScript. A booking adds `POST /api/bookings` (about 100 ms) and then loads all the slots again. Not in these numbers: the first request after Render has put the service to sleep, which can take around 50 seconds.
+Three requests, 5.4 KB transferred, 174 ms in all (measured on 2026-11-20, after the shared stylesheet was added; before it there were two requests and about 95 ms). They run one after the other: the browser waits for the stylesheet before it runs the page's script, and that script asks for the slots. On the next visit `app.css` comes from the cache. A booking adds `POST /api/bookings` (about 100 ms) and then loads all the slots again. Not in these numbers: the first request after Render has put the service to sleep, which can take around 50 seconds.
 
-What I would change: send the first day's slots with the page, or start that request earlier, to save one round trip; after a booking, update one slot instead of reloading all of them.
+What I would change: put the few lines of tokens the page needs first into the page itself, or start the slots request before the stylesheet arrives, to save a round trip on the first visit; after a booking, update one slot instead of reloading all of them.
 
 How I checked: Safari Web Inspector, Network tab, "Disable caches", reload (`docs/ui/waterfall.png`).
+
 
 ## 6. Security basics checked
 
@@ -85,14 +87,14 @@ How I checked: Safari Web Inspector, Network tab, "Disable caches", reload (`doc
 
 ## 7. Known gaps, ranked by risk
 
-1. **Sessions live in the server's memory** (express-session's MemoryStore). Every deploy, rollback or wake-up signs everyone out, and a page that is still open gets 401 on its next request (seen on 2026-11-19). It also leaks memory and would break with two instances, and the cookie has no Max-Age. Fix: keep the sessions in Postgres and give the cookie a lifetime.
+1. **Sessions live in the server's memory** (express-session's MemoryStore). Every deploy, rollback or wake-up signs everyone out, and a page that is still open then gets 401 and shows the server's one word "Unauthorized" instead of sending the user to sign in (seen on 2026-11-19 and 2026-11-21). It also leaks memory and would break with two instances, and the cookie has no Max-Age. Fix: keep the sessions in Postgres, give the cookie a lifetime, and send a 401 back to the sign-in page.
 2. **A slot earlier today can still be booked.** The server refuses past days but not past hours: on 2026-11-20 at 22:16 the 08:00 slot of the same day was booked. Fix: refuse a slot whose start time in Europe/Sofia has passed, with a test.
-3. **The error state does not help.** When the slots cannot be loaded, the page shows the browser's "Load failed", with no explanation and no retry button.
-4. **The "My bookings" page (`/bookings`) from the spec was never built.** A student sees their own bookings only on the booking screen, one lab and one day at a time, or through the MCP tool `my_bookings`.
-5. **Linking a Google account by e-mail does not check that the user has signed in locally once** (Lecture 7). With Google, which verifies addresses, the risk is small; with a less careful provider it would allow an account takeover.
-6. **The free plan:** the first request after about 15 minutes of inactivity waits around 50 seconds, and Neon scales to zero.
-7. Cosmetic: the booking screen's heading shows the lab's id ("Lab 1 Booking") instead of its name, and workstation names are not trimmed.
-8. **UI checklist items not met or not checked** (`docs/UI.md`): no design tokens, the page grows when the slots arrive, the suggestion from the model is not labelled as one, no dark mode; the keyboard-only flow, the focus ring, 768 px and 44 px touch targets were not checked.
+3. **The "My bookings" page (`/bookings`) from the spec was never built.** A student sees their own bookings only on the booking screen, one lab and one day at a time, or through the MCP tool `my_bookings`.
+4. **Linking a Google account by e-mail does not check that the user has signed in locally once** (Lecture 7). With Google, which verifies addresses, the risk is small; with a less careful provider it would allow an account takeover.
+5. **The free plan:** the first request after about 15 minutes of inactivity waits around 50 seconds, and Neon scales to zero.
+6. **Three requests in a row on the first visit** (page, stylesheet, slots; section 5).
+7. **Smaller UI gaps** (`docs/UI.md`): 768 px itself was not tried (820 px was), the labs list and the staff page were not checked state by state, the search suggestion line stays after a failed load, the type scale has seven sizes, and there is no dark mode.
+8. Cosmetic: the booking screen's heading shows the lab's id ("Lab 1 Booking") instead of its name, and workstation names are not trimmed.
 
 ## 8. Model feature
 
