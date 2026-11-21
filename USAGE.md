@@ -42,9 +42,13 @@ One row per agent session. In Gemini CLI, type `/stats` before you quit and copy
 | 2026-11-19 | Gemini CLI: tests for search.js (an earlier session that hung on retries was not recorded) | 1 086 418 (699 779 cached) | 1 912 | | $0.3307 |
 | 2026-11-19 | Gemini CLI: Google sign-in, plan and service (stopped by truncated answers and the rate limit) | 548 922 (414 856 cached) | 3 499 | | $0.1734 |
 | 2026-11-19 | Gemini CLI: Google sign-in, routes and login page | not recorded | not recorded | | |
+| 2026-11-20 | Gemini CLI: UI fixes, part 1 (design tokens, focus ring, 44 px targets), stopped by the rate limit about ten times | not recorded | not recorded | | |
+| 2026-11-20 | Gemini CLI: UI fixes, part 2, a restarted session that had lost the task; stopped, and the part was done by hand | not recorded | not recorded | | |
 
 Price list: Gemini API list price for gemini-3.5-flash-lite, $0.30 per 1M input tokens and $2.50 per 1M output tokens (ai.google.dev/gemini-api/docs/pricing, checked 2026-10-15). Cached input tokens are counted at the full input price, so the real cost would be lower. The claude.ai chat does not show token counts.
 
 Not recorded: in those sessions I quit Gemini CLI without running `/stats` first, or the session ended at the rate limit. The recorded sessions show where the tokens go: nearly all of the input is the agent reading the same files again on each request, and more than 80% of it was cached; the layering fix, a three-line change, cost more input than slice 1.
 
 Exercise 4: the gemini-3-flash-preview requests Gemini CLI makes for loop detection (28 113 and 9 033 input tokens) are not priced here. The free tier stopped several sessions with its limit of 250 000 input tokens per minute; the biggest session (the Postgres switch, 100 requests) cost almost as much as all the other recorded sessions together, because every request sends the whole, growing context again.
+
+The UI session on 2026-11-20 hit the per-minute limit about ten times, and a restarted session began with no memory of the task and spent its quota reading the repository again.

@@ -207,3 +207,15 @@ Changed in review: the first plan added labs (POST /api/labs), which no criterio
 - Four states of the booking screen (Safari: a 5-second fetch delay from the console for loading, Wi-Fi off for the error): "Loading slots..."; on a weekend an empty state with a way out; on an error only the browser's own "Load failed"; and the slots.
 - Waterfall with caches disabled: two requests, the page (about 80 ms) and then the slots (about 75 ms), one after the other because the page's own script asks for the slots; 3.7 KB transferred. A booking adds a POST and a full reload of the slots.
 - Found on the way: a slot earlier today can still be booked (08:00 booked at 22:16).
+
+
+
+## 2026-11-20 · Exercise 4: the UI checklist, fixed and checked
+- Goal: every item in docs/UI.md ticked with evidence, because checks/ex4.mjs requires it: design tokens, a visible focus ring, 44 px touch targets, a readable error with Retry, nothing jumping while the slots load, and the search result labelled as a suggestion.
+- Agent: Gemini CLI, gemini-3.5-flash-lite. A plan first, then two parts; I read every diff before committing.
+- Part 1 by the agent (90fb177): public/assets/app.css with colour, spacing and type tokens, a :focus-visible outline and min-height 44px; only /assets is served statically, with a test that /lab.html still answers 404. 99 tests.
+- What went wrong with the agent: its plan declared path, __dirname and publicDir again in src/app.js; it kept seven type sizes where I asked for at most five; the free tier's limit of 250 000 input tokens per minute stopped it about ten times; after a restart the new session had lost the task, searched the repository for "item 4" and read checks/ and AGENT_LOG.md; and it ran git log, git status and git diff although the prompt said "Never run git" (read only, nothing changed).
+- Part 2 by hand (35e5ccf): a one-off Node script that changed public/lab.html only if each of its 13 edits matched exactly once.
+- Found by looking at screenshots, not by tests: my own "keep the old grid while loading" change left the old grid under the error message, so a Book button would have booked the previous date (fixed in fd220f9); a pasted command ran twice and added a line and a test twice (bc31aee); "Back to Labs" measured 32 px (bf2c2c2).
+- A false claim about deployment, made by the planning assistant (Claude): it said Render had stopped deploying automatically after the rollback. The Events page had only not been refreshed; both pushes had been deployed by Auto-Deploy.
+- Result: 102 tests, the coverage gate green, checks/ex4.mjs 34/34 in a fresh clone, nine screenshots in docs/ui.
